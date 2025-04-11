@@ -10,7 +10,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_LINT_DURING_BUILD=false
 
-RUN npm run build
+RUN npm build
 
 FROM node:20-alpine AS runner
 
