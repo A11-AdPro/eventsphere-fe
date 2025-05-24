@@ -77,6 +77,7 @@ export const ReportProvider = ({ children }) => {
             throw error;
         }
     };
+
     // Create a new report (Attendee)
     const createReport = async (reportData) => {
         try {
@@ -134,6 +135,25 @@ export const ReportProvider = ({ children }) => {
             return data;
         } catch (error) {
             console.error('Error fetching report:', error);
+            setError(error.message);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Get report by ID (Admin)
+    const fetchReportByIdAdmin = async (reportId) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await apiCall(`/api/admin/reports/${reportId}`);
+            setSelectedReport(data);
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching admin report:', error);
             setError(error.message);
             throw error;
         } finally {
@@ -202,7 +222,6 @@ export const ReportProvider = ({ children }) => {
                 method: 'PATCH'
             });
 
-            // Refresh reports list
             await fetchAllReports();
 
             return data;
@@ -215,15 +234,14 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Admin add comment
+    // Admin add comment - FIXED VERSION
     const addAdminComment = async (reportId, message) => {
         try {
             setLoading(true);
             setError(null);
 
             const commentData = {
-                message,
-                responderRole: 'ADMIN' // Explicitly set role
+                message
             };
 
             const data = await apiCall(`/api/admin/reports/${reportId}/comments`, {
@@ -231,10 +249,9 @@ export const ReportProvider = ({ children }) => {
                 body: JSON.stringify(commentData)
             });
 
-            // Refresh both the reports list and selected report
-            await fetchAllReports();
+            // Refresh the selected report instead of all reports for better UX
             if (selectedReport?.id === reportId) {
-                await fetchReportById(reportId);
+                await fetchReportByIdAdmin(reportId);
             }
 
             return data;
@@ -257,7 +274,6 @@ export const ReportProvider = ({ children }) => {
                 method: 'DELETE'
             });
 
-            // Refresh reports list
             await fetchAllReports();
 
             return true;
@@ -270,7 +286,101 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Utility functions
+    // Organizer functions
+    const fetchOrganizerReports = async (status = null) => {
+        try {
+            setError(null);
+            let url = '/api/organizer/reports';
+            if (status) {
+                url += `?status=${status}`;
+            }
+
+            const data = await apiCall(url);
+
+            if (Array.isArray(data)) {
+                setReports(data);
+            } else {
+                setReports([]);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching organizer reports:', error);
+            setError(error.message);
+            setReports([]);
+            throw error;
+        }
+    };
+
+    const fetchReportByIdOrganizer = async (reportId) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await apiCall(`/api/organizer/reports/${reportId}`);
+            setSelectedReport(data);
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching organizer report:', error);
+            setError(error.message);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const addOrganizerComment = async (reportId, message) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const commentData = {
+                message
+            };
+
+            const data = await apiCall(`/api/organizer/reports/${reportId}/comments`, {
+                method: 'POST',
+                body: JSON.stringify(commentData)
+            });
+
+            // Refresh the selected report
+            if (selectedReport?.id === reportId) {
+                await fetchReportByIdOrganizer(reportId);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error adding organizer comment:', error);
+            setError(error.message);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateOrganizerReportStatus = async (reportId, status) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await apiCall(`/api/organizer/reports/${reportId}/status?status=${status}`, {
+                method: 'PATCH'
+            });
+
+            // Refresh reports list
+            await fetchOrganizerReports();
+
+            return data;
+        } catch (error) {
+            console.error('Error updating organizer report status:', error);
+            setError(error.message);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const getReportCategoryDisplay = (category) => {
         switch (category) {
             case 'PAYMENT':
@@ -347,7 +457,6 @@ export const ReportProvider = ({ children }) => {
     useEffect(() => {
         const token = getAuthToken();
         if (token) {
-            // Don't auto-load reports on mount, let components decide when to load
         }
     }, []);
 
@@ -356,14 +465,26 @@ export const ReportProvider = ({ children }) => {
         selectedReport,
         loading,
         error,
+        // Attendee functions
         createReport,
         fetchMyReports,
         fetchReportById,
         addComment,
+
+        // Admin functions
         fetchAllReports,
+        fetchReportByIdAdmin,
         updateReportStatus,
         addAdminComment,
         deleteReport,
+
+        // Organizer functions
+        fetchOrganizerReports,
+        fetchReportByIdOrganizer,
+        addOrganizerComment,
+        updateOrganizerReportStatus,
+
+        // Utility functions
         getReportCategoryDisplay,
         getReportStatusDisplay,
         getStatusColorClass,

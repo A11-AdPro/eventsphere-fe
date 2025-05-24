@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/app/contexts/AuthContext';
-import { useReports } from '@/app/contexts/ReportContext';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, MessageCircle, Send, Clock, CheckCircle, AlertCircle, FileText, User, Trash2, Edit } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Send, Clock, CheckCircle, AlertCircle, FileText, User, Trash2 } from 'lucide-react';
 
 export default function AdminReportDetailPage() {
     const { user, loading: authLoading, isAdmin } = useAuth();
@@ -12,26 +11,17 @@ export default function AdminReportDetailPage() {
     const params = useParams();
     const reportId = params.id;
 
-    const {
-        selectedReport,
-        loading,
-        error,
-        addAdminComment,
-        updateReportStatus,
-        deleteReport,
-        getReportCategoryDisplay,
-        getReportStatusDisplay,
-        getStatusColorClass,
-        getCategoryColorClass,
-        formatDate,
-        setError
-    } = useReports();
-
+    const [selectedReport, setSelectedReport] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [mounted, setMounted] = useState(false);
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);
     const [commentError, setCommentError] = useState('');
     const [statusUpdating, setStatusUpdating] = useState(false);
+
+    // Constants
+    const API_BASE_URL = 'http://localhost:8080';
 
     useEffect(() => {
         setMounted(true);
@@ -45,32 +35,71 @@ export default function AdminReportDetailPage() {
             }
 
             if (reportId) {
-                // For admin, use the admin API endpoint
                 fetchReportByIdAdmin(reportId).catch(console.error);
             }
         }
     }, [user, router, authLoading, mounted, reportId, isAdmin]);
 
-    const fetchReportByIdAdmin = async (id) => {
+    // Helper function for API calls
+    const getAuthHeaders = () => ({
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'application/json'
+    });
+
+    const apiCall = async (url, options = {}) => {
         try {
-            const response = await fetch(`http://localhost:8080/api/admin/reports/${id}`, {
+            const response = await fetch(`${API_BASE_URL}${url}`, {
+                ...options,
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                }
+                    ...getAuthHeaders(),
+                    ...options.headers,
+                },
             });
 
             if (!response.ok) {
-                throw new Error('Failed to fetch report');
+                let errorMessage = `HTTP error! status: ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    const errorText = await response.text();
+                    if (errorText) errorMessage = errorText;
+                }
+                throw new Error(errorMessage);
             }
 
-            const data = await response.json();
-            // Set the report data manually since we're bypassing the context method
-            // You might want to add a setSelectedReport method to your context
+            // Handle empty responses (204 No Content)
+            if (response.status === 204) {
+                return null;
+            }
+
+            // Only parse JSON if content-type is application/json
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            }
+
+            return await response.text();
+        } catch (error) {
+            console.error('API call error:', error);
+            throw error;
+        }
+    };
+
+    const fetchReportByIdAdmin = async (id) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await apiCall(`/api/admin/reports/${id}`);
+            setSelectedReport(data);
             return data;
         } catch (err) {
+            console.error('Error fetching report:', err);
             setError(err.message);
             throw err;
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -94,7 +123,16 @@ export default function AdminReportDetailPage() {
             setCommentLoading(true);
             setCommentError('');
 
-            await addAdminComment(reportId, newComment.trim());
+            // Use direct API call instead of context
+            const commentData = {
+                message: newComment.trim()
+            };
+
+            await apiCall(`/api/admin/reports/${reportId}/comments`, {
+                method: 'POST',
+                body: JSON.stringify(commentData)
+            });
+
             setNewComment('');
 
             // Refresh the report data
@@ -109,12 +147,16 @@ export default function AdminReportDetailPage() {
     const handleStatusUpdate = async (newStatus) => {
         try {
             setStatusUpdating(true);
-            await updateReportStatus(reportId, newStatus);
+
+            await apiCall(`/api/admin/reports/${reportId}/status?status=${newStatus}`, {
+                method: 'PATCH'
+            });
 
             // Refresh the report data
             await fetchReportByIdAdmin(reportId);
         } catch (err) {
             console.error('Error updating status:', err);
+            setError('Failed to update report status');
         } finally {
             setStatusUpdating(false);
         }
@@ -123,52 +165,97 @@ export default function AdminReportDetailPage() {
     const handleDeleteReport = async () => {
         if (window.confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
             try {
-                await deleteReport(reportId);
+                await apiCall(`/api/admin/reports/${reportId}`, {
+                    method: 'DELETE'
+                });
+
                 router.push('/admin/reports');
             } catch (err) {
                 console.error('Error deleting report:', err);
+                setError('Failed to delete report');
             }
+        }
+    };
+
+    // Utility functions
+    const getReportCategoryDisplay = (category) => {
+        switch (category) {
+            case 'PAYMENT': return 'Payment Issue';
+            case 'TICKET': return 'Ticket Issue';
+            case 'EVENT': return 'Event Issue';
+            case 'OTHER': return 'Other Issue';
+            default: return category;
+        }
+    };
+
+    const getReportStatusDisplay = (status) => {
+        switch (status) {
+            case 'PENDING': return 'Pending';
+            case 'ON_PROGRESS': return 'On Progress';
+            case 'RESOLVED': return 'Resolved';
+            default: return status;
+        }
+    };
+
+    const getStatusColorClass = (status) => {
+        switch (status) {
+            case 'PENDING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'ON_PROGRESS': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'RESOLVED': return 'bg-green-100 text-green-800 border-green-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+    };
+
+    const getCategoryColorClass = (category) => {
+        switch (category) {
+            case 'PAYMENT': return 'bg-red-100 text-red-800 border-red-200';
+            case 'TICKET': return 'bg-purple-100 text-purple-800 border-purple-200';
+            case 'EVENT': return 'bg-orange-100 text-orange-800 border-orange-200';
+            case 'OTHER': return 'bg-gray-100 text-gray-800 border-gray-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+            return new Date(dateString).toLocaleString('id-ID', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        } catch (error) {
+            return 'Invalid Date';
         }
     };
 
     const getStatusIcon = (status) => {
         switch (status) {
-            case 'PENDING':
-                return <Clock className="w-5 h-5" />;
-            case 'ON_PROGRESS':
-                return <AlertCircle className="w-5 h-5" />;
-            case 'RESOLVED':
-                return <CheckCircle className="w-5 h-5" />;
-            default:
-                return <FileText className="w-5 h-5" />;
+            case 'PENDING': return <Clock className="w-5 h-5" />;
+            case 'ON_PROGRESS': return <AlertCircle className="w-5 h-5" />;
+            case 'RESOLVED': return <CheckCircle className="w-5 h-5" />;
+            default: return <FileText className="w-5 h-5" />;
         }
     };
 
     const getRoleIcon = (role) => {
         switch (role) {
-            case 'ADMIN':
-                return '👑';
-            case 'ORGANIZER':
-                return '🎯';
-            case 'ATTENDEE':
-                return '👤';
-            default:
-                return '🤖';
+            case 'ADMIN': return '👑';
+            case 'ORGANIZER': return '🎯';
+            case 'ATTENDEE': return '👤';
+            default: return '🤖';
         }
     };
 
     const getRoleColor = (role) => {
         switch (role) {
-            case 'ADMIN':
-                return 'text-red-600 bg-red-50 border-red-200';
-            case 'ORGANIZER':
-                return 'text-green-600 bg-green-50 border-green-200';
-            case 'ATTENDEE':
-                return 'text-blue-600 bg-blue-50 border-blue-200';
-            case 'SYSTEM':
-                return 'text-purple-600 bg-purple-50 border-purple-200';
-            default:
-                return 'text-gray-600 bg-gray-50 border-gray-200';
+            case 'ADMIN': return 'text-red-600 bg-red-50 border-red-200';
+            case 'ORGANIZER': return 'text-green-600 bg-green-50 border-green-200';
+            case 'ATTENDEE': return 'text-blue-600 bg-blue-50 border-blue-200';
+            case 'SYSTEM': return 'text-purple-600 bg-purple-50 border-purple-200';
+            default: return 'text-gray-600 bg-gray-50 border-gray-200';
         }
     };
 
@@ -243,8 +330,8 @@ export default function AdminReportDetailPage() {
                                 <span>{getReportStatusDisplay(selectedReport.status)}</span>
                             </div>
                             <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getCategoryColorClass(selectedReport.category)}`}>
-                {getReportCategoryDisplay(selectedReport.category)}
-              </span>
+                                {getReportCategoryDisplay(selectedReport.category)}
+                            </span>
                         </div>
                         <div className="text-sm text-gray-500">
                             Report ID: {selectedReport.id}
@@ -314,17 +401,17 @@ export default function AdminReportDetailPage() {
                                         <div className="flex items-center space-x-2">
                                             <span className="text-lg">{getRoleIcon(comment.responderRole)}</span>
                                             <span className={`px-2 py-1 rounded text-xs font-medium border ${getRoleColor(comment.responderRole)}`}>
-                        {comment.responderRole}
-                      </span>
+                                                {comment.responderRole}
+                                            </span>
                                             {comment.responderEmail && (
                                                 <span className="text-sm text-gray-600">
-                          {comment.responderEmail}
-                        </span>
+                                                    {comment.responderEmail}
+                                                </span>
                                             )}
                                         </div>
                                         <span className="text-sm text-gray-500">
-                      {formatDate(comment.createdAt)}
-                    </span>
+                                            {formatDate(comment.createdAt)}
+                                        </span>
                                     </div>
                                     <p className="text-gray-700 whitespace-pre-wrap">{comment.message}</p>
                                 </div>
@@ -357,20 +444,20 @@ export default function AdminReportDetailPage() {
                                 </div>
                             </div>
                             <div className="flex-1">
-                <textarea
-                    value={newComment}
-                    onChange={(e) => {
-                        setNewComment(e.target.value);
-                        setCommentError('');
-                    }}
-                    placeholder="Provide a response to the user's report..."
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                />
+                                <textarea
+                                    value={newComment}
+                                    onChange={(e) => {
+                                        setNewComment(e.target.value);
+                                        setCommentError('');
+                                    }}
+                                    placeholder="Provide a response to the user's report..."
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                                />
                                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm text-gray-500">
-                    {newComment.length}/500 characters
-                  </span>
+                                    <span className="text-sm text-gray-500">
+                                        {newComment.length}/500 characters
+                                    </span>
                                     <button
                                         type="submit"
                                         disabled={commentLoading || !newComment.trim() || newComment.length > 500}
