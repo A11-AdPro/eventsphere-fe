@@ -16,7 +16,7 @@ export default function Dashboard() {
                 <p className="mb-2">Welcome, {user.fullName || user.email}!</p>
                 <p className="mb-4">Role: {user.role}</p>
                 <button 
-                    onClick={logout}
+          onClick={logout}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
                 >
                     Logout

@@ -5,6 +5,8 @@ import { TopUpProvider } from './contexts/TopUpContext';
 import { TransactionProvider } from './contexts/TransactionContext';
 import { TicketProvider } from './contexts/TicketContext';
 import { EventProvider } from './contexts/EventContext';
+import { ReportProvider } from './contexts/ReportContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import './globals.css';
 
 export default function RootLayout({ children }) {
@@ -16,7 +18,11 @@ export default function RootLayout({ children }) {
             <TicketProvider>
               <TopUpProvider>
                 <TransactionProvider>
-                  {children}
+                  <ReportProvider>
+                    <NotificationProvider>
+                      {children}
+                    </NotificationProvider>
+                  </ReportProvider>
                 </TransactionProvider>
               </TopUpProvider>
             </TicketProvider>
