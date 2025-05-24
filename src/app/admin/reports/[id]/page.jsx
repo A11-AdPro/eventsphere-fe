@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useReports } from '../../contexts/ReportContext';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { useReports } from '@/app/contexts/ReportContext';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, MessageCircle, Send, Clock, CheckCircle, AlertCircle, FileText, User, Trash2, Edit } from 'lucide-react';
 
