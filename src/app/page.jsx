@@ -11,7 +11,6 @@ export default function HomePage() {
     useEffect(() => {
         if (!loading) {
             if (user) {
-                // Redirect based on user role
                 switch (user.role) {
                     case 'ADMIN':
                         router.push('/admin');
@@ -26,7 +25,6 @@ export default function HomePage() {
                         router.push('/dashboard');
                 }
             } else {
-                // Not logged in, redirect to login
                 router.push('/login');
             }
         }
@@ -43,5 +41,5 @@ export default function HomePage() {
         );
     }
 
-    return null; // This will not be shown as user gets redirected
+    return null; 
 }

@@ -21,10 +21,10 @@ export default function RegisterPage() {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData({
-            ...formData,
+        setFormData(prev => ({
+            ...prev,
             [name]: type === 'checkbox' ? checked : value,
-        });
+        }));
     };
 
     const validateStep1 = () => {
@@ -62,7 +62,6 @@ export default function RegisterPage() {
 
         const { email, password, confirmPassword, fullName, acceptTerms } = formData;
 
-        // Validation
         if (!password) {
             setError('Password harus diisi');
             setLoading(false);
@@ -84,7 +83,6 @@ export default function RegisterPage() {
             return;
         }
 
-        // Data that matches backend RegisterRequest.java
         const result = await register({
             email: email.trim(),
             password,
@@ -97,7 +95,7 @@ export default function RegisterPage() {
         if (result.success) {
             router.push('/login?registered=true');
         } else {
-            setError(result.message || 'Registrasi gagal. Silakan coba lagi.');
+            setError(result.message);
         }
     };
 
@@ -112,9 +110,9 @@ export default function RegisterPage() {
                     </div>
                     <div className="hidden md:block space-y-4 mt-10">
                         {[
-                            { title: 'Mudah Digunakan', desc: 'Antarmuka intuitif' },
-                            { title: 'Aman & Terpercaya', desc: 'Data Anda selalu terlindungi' },
-                            { title: 'Fitur Lengkap', desc: 'Semua dalam satu platform' },
+                            { title: 'Mudah Digunakan', desc: 'Antarmuka intuitif dan user-friendly' },
+                            { title: 'Aman & Terpercaya', desc: 'Data Anda selalu terlindungi dengan baik' },
+                            { title: 'Fitur Lengkap', desc: 'Semua kebutuhan event dalam satu platform' },
                         ].map((item, idx) => (
                             <div key={idx} className="flex items-center">
                                 <div className="bg-indigo-500 p-2 rounded-full">
@@ -134,7 +132,7 @@ export default function RegisterPage() {
                 {/* Right Panel */}
                 <div className="p-8 md:p-12 md:w-7/12">
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">Buat Akun Baru</h2>
-                    <p className="text-gray-500 mb-6">Lengkapi formulir berikut untuk mendaftar</p>
+                    <p className="text-gray-500 mb-6">Lengkapi formulir berikut untuk mendaftar sebagai Attendee</p>
 
                     {error && (
                         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -146,10 +144,16 @@ export default function RegisterPage() {
                     <div className="mb-8 flex items-center justify-between">
                         {[1, 2].map((s, i) => (
                             <div key={s} className="flex items-center">
-                                <div className={`h-8 w-8 rounded-full flex items-center justify-center ${step >= s ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                                    step >= s ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'
+                                }`}>
                                     {s}
                                 </div>
-                                {i === 0 && <div className={`h-1 w-10 md:w-20 mx-2 ${step > 1 ? 'bg-indigo-600' : 'bg-gray-200'}`} />}
+                                {i === 0 && (
+                                    <div className={`h-1 w-10 md:w-20 mx-2 ${
+                                        step > 1 ? 'bg-indigo-600' : 'bg-gray-200'
+                                    }`} />
+                                )}
                             </div>
                         ))}
                     </div>
@@ -162,7 +166,8 @@ export default function RegisterPage() {
                                     id="fullName" 
                                     value={formData.fullName} 
                                     onChange={handleChange} 
-                                    placeholder="Masukkan nama lengkap"
+                                    placeholder="Masukkan nama lengkap Anda"
+                                    required
                                 />
                                 <InputField 
                                     label="Email" 
@@ -171,6 +176,7 @@ export default function RegisterPage() {
                                     value={formData.email} 
                                     onChange={handleChange} 
                                     placeholder="contoh@email.com"
+                                    required
                                 />
                                 <button
                                     type="button"
@@ -191,6 +197,7 @@ export default function RegisterPage() {
                                     value={formData.password} 
                                     onChange={handleChange} 
                                     placeholder="Minimal 8 karakter"
+                                    required
                                 />
                                 <InputField 
                                     label="Konfirmasi Password" 
@@ -198,7 +205,8 @@ export default function RegisterPage() {
                                     type="password" 
                                     value={formData.confirmPassword} 
                                     onChange={handleChange} 
-                                    placeholder="Ulangi password"
+                                    placeholder="Ulangi password yang sama"
+                                    required
                                 />
                                 <div className="flex items-start">
                                     <input 
@@ -208,9 +216,14 @@ export default function RegisterPage() {
                                         checked={formData.acceptTerms}
                                         onChange={handleChange} 
                                         className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" 
+                                        required
                                     />
                                     <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-700">
-                                        Saya menyetujui <a href="#" className="text-indigo-600 hover:underline">syarat dan ketentuan</a>
+                                        Saya menyetujui{' '}
+                                        <a href="#" className="text-indigo-600 hover:underline">
+                                            syarat dan ketentuan
+                                        </a>{' '}
+                                        yang berlaku
                                     </label>
                                 </div>
                                 <div className="flex gap-4">
@@ -235,7 +248,9 @@ export default function RegisterPage() {
 
                     <p className="text-center text-sm text-gray-600 mt-8">
                         Sudah punya akun?{' '}
-                        <Link href="/login" className="text-indigo-600 hover:underline">Login di sini</Link>
+                        <Link href="/login" className="text-indigo-600 hover:underline font-medium">
+                            Login di sini
+                        </Link>
                     </p>
                 </div>
             </div>
@@ -243,12 +258,11 @@ export default function RegisterPage() {
     );
 }
 
-// Input component for reusability
-function InputField({ id, label, type = 'text', value, onChange, placeholder }) {
+function InputField({ id, label, type = 'text', value, onChange, placeholder, required = false }) {
     return (
         <div>
             <label htmlFor={id} className="block text-gray-700 text-sm font-medium mb-2">
-                {label}
+                {label} {required && <span className="text-red-500">*</span>}
             </label>
             <input
                 id={id}
@@ -258,7 +272,7 @@ function InputField({ id, label, type = 'text', value, onChange, placeholder }) 
                 onChange={onChange}
                 placeholder={placeholder}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                required
+                required={required}
             />
         </div>
     );
