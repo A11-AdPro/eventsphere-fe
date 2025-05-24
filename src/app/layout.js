@@ -7,6 +7,10 @@ import { TicketProvider } from './contexts/TicketContext';
 import { EventProvider } from './contexts/EventContext';
 import { ReportProvider } from './contexts/ReportContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { AdminUserProvider } from './contexts/AdminUserContext';
+import { AdminTicketProvider } from './contexts/AdminTicketContext';
+import { AdminTransactionProvider } from './contexts/AdminTransactionContext';
+
 import './globals.css';
 
 export default function RootLayout({ children }) {
@@ -14,19 +18,25 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <AuthProvider>
-          <EventProvider>
-            <TicketProvider>
-              <TopUpProvider>
-                <TransactionProvider>
-                  <ReportProvider>
+          <AdminUserProvider>
+            <EventProvider>
+              <AdminTicketProvider>
+                <AdminTransactionProvider>
+                  <TicketProvider>
+                    <TopUpProvider>
+                      <TransactionProvider>
+                        <ReportProvider>
                     <NotificationProvider>
                       {children}
-                    </NotificationProvider>
+                          </NotificationProvider>
                   </ReportProvider>
                 </TransactionProvider>
-              </TopUpProvider>
-            </TicketProvider>
-          </EventProvider>
+                    </TopUpProvider>
+                  </TicketProvider>
+                </AdminTransactionProvider>
+              </AdminTicketProvider>
+            </EventProvider>
+          </AdminUserProvider>
         </AuthProvider>
       </body>
     </html>

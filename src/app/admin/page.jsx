@@ -14,7 +14,7 @@ export default function AdminDashboard() {
     }, []);
 
     useEffect(() => {
-        if (mounted && !authLoading) {            
+        if (mounted && !authLoading) {
             if (!user) {
                 console.log('No user, redirecting to login');
                 router.push('/login');
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
             {/* Main Content */}
             <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">                
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div className="bg-white overflow-hidden shadow rounded-lg">
                         <div className="p-5">
                             <div className="flex items-center">
@@ -102,8 +102,15 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
-                                        <dd className="text-lg font-medium text-gray-900">-</dd>
+                                        <dt className="text-sm font-medium text-gray-500 truncate">User Management</dt>
+                                        <dd className="text-lg font-medium text-gray-900">
+                                            <button 
+                                                onClick={() => router.push('/admin/users')}
+                                                className="text-blue-600 hover:text-blue-800"
+                                            >
+                                                Manage →
+                                            </button>
+                                        </dd>
                                     </dl>
                                 </div>
                             </div>
@@ -116,14 +123,48 @@ export default function AdminDashboard() {
                                 <div className="flex-shrink-0">
                                     <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
                                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 01-2-2z" />
                                         </svg>
                                     </div>
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">Total Events</dt>
-                                        <dd className="text-lg font-medium text-gray-900">-</dd>
+                                        <dt className="text-sm font-medium text-gray-500 truncate">Transactions</dt>
+                                        <dd className="text-lg font-medium text-gray-900">
+                                            <button 
+                                                onClick={() => router.push('/admin/transactions')}
+                                                className="text-green-600 hover:text-green-800"
+                                            >
+                                                View →
+                                            </button>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white overflow-hidden shadow rounded-lg">
+                        <div className="p-5">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0">
+                                    <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div className="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt className="text-sm font-medium text-gray-500 truncate">Ticket Management</dt>
+                                        <dd className="text-lg font-medium text-gray-900">
+                                            <button 
+                                                onClick={() => router.push('/admin/tickets')}
+                                                className="text-purple-600 hover:text-purple-800"
+                                            >
+                                                Manage →
+                                            </button>
+                                        </dd>
                                     </dl>
                                 </div>
                             </div>
@@ -136,42 +177,32 @@ export default function AdminDashboard() {
                                 <div className="flex-shrink-0">
                                     <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
                                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 01-2-2z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                     </div>
                                 </div>
                                 <div className="ml-5 w-0 flex-1">
                                     <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">Active Sessions</dt>
-                                        <dd className="text-lg font-medium text-gray-900">-</dd>
+                                        <dt className="text-sm font-medium text-gray-500 truncate">Events Overview</dt>
+                                        <dd className="text-lg font-medium text-gray-900">
+                                            <button 
+                                                onClick={() => router.push('/admin/events')}
+                                                className="text-yellow-600 hover:text-yellow-800"
+                                            >
+                                                View →
+                                            </button>
+                                        </dd>
                                     </dl>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <div className="bg-white overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <Bell className="h-6 w-6 text-orange-400" />
-                                </div>
-                                <div className="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt className="text-sm font-medium text-gray-500 truncate">Pending Notifications</dt>
-                                        <dd className="text-lg font-medium text-gray-900">{unreadCount}</dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
 
                 {/* Quick Actions */}
                 <div className="bg-white shadow rounded-lg p-6 mb-8">
                     <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <button
                             onClick={() => router.push('/admin/register')}
                             className="flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200"
@@ -179,7 +210,7 @@ export default function AdminDashboard() {
                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
-                            Register New User
+                            Add User
                         </button>
 
                         <button
@@ -193,13 +224,23 @@ export default function AdminDashboard() {
                         </button>
 
                         <button
-                            onClick={() => router.push('/admin/events')}
+                            onClick={() => router.push('/admin/transactions')}
                             className="flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition duration-200"
                         >
                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 01-2-2z" />
                             </svg>
-                            Manage Events
+                            View Transactions
+                        </button>
+
+                        <button
+                            onClick={() => router.push('/admin/tickets')}
+                            className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition duration-200"
+                        >
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                            </svg>
+                            Manage Tickets
                         </button>
 
                         <button
@@ -212,17 +253,6 @@ export default function AdminDashboard() {
                             Manage Reports
                         </button>
 
-                    </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="bg-white shadow rounded-lg p-6">
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h2>
-                    <div className="text-center py-8 text-gray-500">
-                        <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                        <p>No recent activity to display</p>
                     </div>
                 </div>
             </main>
