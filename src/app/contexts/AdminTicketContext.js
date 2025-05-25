@@ -20,35 +20,23 @@ export const AdminTicketProvider = ({ children }) => {
 
     const getAuthHeaders = () => {
         const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('Token not found');
+        }
         return {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
         };
     };
 
-    const getAllTickets = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch('/api/tickets', {
-                headers: getAuthHeaders(),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setTickets(data);
-                return { success: true, data };
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to fetch tickets');
-            }
-        } catch (error) {
-            setError(error.message);
-            return { success: false, message: error.message };
-        } finally {
-            setLoading(false);
+    const getAllTickets = async () => {
+        const res = await fetch('http://localhost:3000/api/tickets');  // sesuaikan base URL mu
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`Error ${res.status}: ${text}`);
         }
-    }, []);
+        return res.json();
+    };
 
     const deleteTicket = useCallback(async (ticketId) => {
         setLoading(true);
