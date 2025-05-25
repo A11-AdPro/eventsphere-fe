@@ -207,31 +207,31 @@ export const EventProvider = ({ children }) => {
     }
   };
 
-  // Get events by organizer (for organizers)
-  const fetchOrganizerEvents = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await fetch(`${API_BASE_URL}/events/my-events`, {
-        method: 'GET',
-        headers: getAuthHeaders()
-      });
+ const fetchOrganizerEvents = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    
+    const response = await fetch(`${API_BASE_URL}/events/my-events`, { // Ensure API_BASE_URL is correct
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch organizer events: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (err) {
-      setError(err.message);
-      console.error('Error fetching organizer events:', err);
-      throw err;
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch organizer events: ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+    setEvents(data);  // Use the data directly from the API
+    return data;      // Return the data
+  } catch (err) {
+    setError(err.message);
+    console.error('Error fetching organizer events:', err);
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Utility functions
   const formatCurrency = (amount) => {
