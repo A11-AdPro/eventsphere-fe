@@ -8,8 +8,11 @@ import { Filter, Search, Eye, Trash2, MessageCircle, Clock, CheckCircle, AlertCi
 import Header from '../../components/Header';
 
 export default function AdminReportsPage() {
+    // Mengambil data autentikasi pengguna
     const { user, loading: authLoading, isAdmin } = useAuth();
     const router = useRouter();
+
+    // Mengambil data dan fungsi terkait laporan dari context
     const {
         reports,
         loading,
@@ -28,10 +31,12 @@ export default function AdminReportsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredReports, setFilteredReports] = useState([]);
 
+    // Effect untuk memastikan komponen sudah dimuat sebelum mengambil laporan
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Effect untuk memeriksa autentikasi dan mengambil laporan jika sudah terautentikasi
     useEffect(() => {
         if (mounted && !authLoading) {
             if (!user || !isAdmin()) {
@@ -39,12 +44,11 @@ export default function AdminReportsPage() {
                 return;
             }
 
-            // Load all reports
             fetchAllReports().catch(console.error);
         }
     }, [user, router, authLoading, mounted, isAdmin]);
 
-    // Filter reports based on status and search term
+    // Filter laporan berdasarkan status dan kata kunci pencarian
     useEffect(() => {
         let filtered = reports;
 
@@ -63,6 +67,7 @@ export default function AdminReportsPage() {
         setFilteredReports(filtered);
     }, [reports, selectedStatus, searchTerm]);
 
+    // Fungsi untuk memperbarui status laporan
     const handleStatusChange = async (reportId, newStatus) => {
         try {
             await updateReportStatus(reportId, newStatus);
@@ -71,6 +76,7 @@ export default function AdminReportsPage() {
         }
     };
 
+    // Fungsi untuk menghapus laporan
     const handleDeleteReport = async (reportId) => {
         if (window.confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
             try {
@@ -81,10 +87,12 @@ export default function AdminReportsPage() {
         }
     };
 
+    // Fungsi untuk melihat detail laporan
     const handleViewReport = (reportId) => {
         router.push(`/admin/reports/${reportId}`);
     };
 
+    // Menampilkan loading jika data belum siap
     if (!mounted || authLoading || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -96,6 +104,7 @@ export default function AdminReportsPage() {
         );
     }
 
+    // Menangani kasus jika user tidak memiliki hak akses
     if (!user || !isAdmin()) {
         return null;
     }
@@ -114,8 +123,9 @@ export default function AdminReportsPage() {
                     </div>
                 )}
 
-                {/* Stats Cards */}
+                {/* Kartu Statistik */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    {/* Total Laporan */}
                     <div className="bg-white overflow-hidden shadow rounded-lg">
                         <div className="p-5">
                             <div className="flex items-center">
@@ -132,6 +142,7 @@ export default function AdminReportsPage() {
                         </div>
                     </div>
 
+                    {/* Laporan Pending */}
                     <div className="bg-white overflow-hidden shadow rounded-lg">
                         <div className="p-5">
                             <div className="flex items-center">
@@ -150,6 +161,7 @@ export default function AdminReportsPage() {
                         </div>
                     </div>
 
+                    {/* Laporan In Progress */}
                     <div className="bg-white overflow-hidden shadow rounded-lg">
                         <div className="p-5">
                             <div className="flex items-center">
@@ -168,6 +180,7 @@ export default function AdminReportsPage() {
                         </div>
                     </div>
 
+                    {/* Laporan Resolved */}
                     <div className="bg-white overflow-hidden shadow rounded-lg">
                         <div className="p-5">
                             <div className="flex items-center">
@@ -187,7 +200,7 @@ export default function AdminReportsPage() {
                     </div>
                 </div>
 
-                {/* Filters */}
+                {/* Filter Laporan */}
                 <div className="bg-white shadow rounded-lg p-6 mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
                         <div className="flex items-center space-x-4">
@@ -221,7 +234,7 @@ export default function AdminReportsPage() {
                     </div>
                 </div>
 
-                {/* Reports Table */}
+                {/* Tabel Laporan */}
                 <div className="bg-white shadow rounded-lg overflow-hidden">
                     <div className="px-6 py-4 border-b border-gray-200">
                         <h3 className="text-lg font-medium text-gray-900">
@@ -242,21 +255,11 @@ export default function AdminReportsPage() {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Description
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Created
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Comments
-                                    </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
-                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -264,13 +267,11 @@ export default function AdminReportsPage() {
                                     <tr key={report.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div>
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    {report.userEmail}
-                                                </div>
+                                                <div className="text-sm font-medium text-gray-900">{report.userEmail}</div>
                                                 <div className="mt-1">
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getCategoryColorClass(report.category)}`}>
-                              {getReportCategoryDisplay(report.category)}
-                            </span>
+                                                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getCategoryColorClass(report.category)}`}>
+                                                            {getReportCategoryDisplay(report.category)}
+                                                        </span>
                                                 </div>
                                             </div>
                                         </td>

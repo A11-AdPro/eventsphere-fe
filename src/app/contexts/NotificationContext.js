@@ -1,9 +1,11 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import {createContext, useContext, useEffect, useState} from 'react';
 
+// Membuat context untuk notifikasi
 const NotificationContext = createContext();
 
+// Hook untuk mengakses context notifikasi
 export const useNotifications = () => {
     const context = useContext(NotificationContext);
     if (!context) {
@@ -12,15 +14,17 @@ export const useNotifications = () => {
     return context;
 };
 
+// Penyedia context notifikasi untuk aplikasi
 export const NotificationProvider = ({ children }) => {
-    const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [notifications, setNotifications] = useState([]); // Menyimpan daftar notifikasi
+    const [unreadCount, setUnreadCount] = useState(0); // Menyimpan jumlah notifikasi yang belum dibaca
+    const [loading, setLoading] = useState(false); // Menyimpan status loading
+    const [error, setError] = useState(null); // Menyimpan error jika ada
 
-    // CHANGE THIS LINE WHEN DEPLOYING
+    // URL API untuk pengambilan data notifikasi
     const API_BASE_URL = 'http://localhost:8080';
 
+    // Mendapatkan token autentikasi dari localStorage
     const getAuthToken = () => {
         if (typeof window !== 'undefined') {
             return localStorage.getItem('token');
@@ -28,6 +32,7 @@ export const NotificationProvider = ({ children }) => {
         return '';
     };
 
+    // Menyusun header untuk autentikasi
     const getAuthHeaders = () => {
         const token = getAuthToken();
         return {
@@ -36,6 +41,7 @@ export const NotificationProvider = ({ children }) => {
         };
     };
 
+    // Fungsi umum untuk melakukan panggilan API
     const apiCall = async (url, options = {}) => {
         try {
             const response = await fetch(`${API_BASE_URL}${url}`, {
@@ -53,20 +59,16 @@ export const NotificationProvider = ({ children }) => {
                     const errorData = await response.json();
                     errorMessage = errorData.message || errorMessage;
                 } catch (e) {
-                    try {
-                        const errorText = await response.text();
-                        if (errorText) {
-                            errorMessage = errorText;
-                        }
-                    } catch (textError) {
-                        // Ignore
+                    const errorText = await response.text();
+                    if (errorText) {
+                        errorMessage = errorText;
                     }
                 }
 
                 throw new Error(errorMessage);
             }
 
-            // Handle 204 No Content responses
+            // Menangani respons kosong (204 No Content)
             if (response.status === 204) {
                 return null;
             }
@@ -83,14 +85,13 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Fetch all notifications
+    // Mengambil semua notifikasi
     const fetchNotifications = async () => {
         try {
             setError(null);
             const data = await apiCall('/api/notifications');
 
             if (Array.isArray(data)) {
-                console.log('Fetched notifications:', data); // Debug log
                 setNotifications(data);
                 setUnreadCount(data.filter(n => !n.read).length);
             } else {
@@ -108,13 +109,13 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
+    // Mengambil notifikasi yang belum dibaca
     const fetchUnreadNotifications = async () => {
         try {
             setError(null);
             const data = await apiCall('/api/notifications/unread');
 
             if (Array.isArray(data)) {
-                console.log('Fetched unread notifications:', data); // Debug log
                 setUnreadCount(data.length);
             } else {
                 setUnreadCount(0);
@@ -129,14 +130,13 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Fetch unread count only
+    // Mengambil jumlah notifikasi yang belum dibaca
     const fetchUnreadCount = async () => {
         try {
             setError(null);
             const data = await apiCall('/api/notifications/count');
 
             if (data && typeof data.unreadCount === 'number') {
-                console.log('Unread count:', data.unreadCount); // Debug log
                 setUnreadCount(data.unreadCount);
             } else {
                 setUnreadCount(0);
@@ -151,13 +151,13 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Mark notification as read
+    // Menandai notifikasi sebagai dibaca
     const markAsRead = async (notificationId) => {
         try {
             setLoading(true);
             setError(null);
 
-            // Optimistically update the UI first
+            // Update UI secara optimis
             setNotifications(prev =>
                 prev.map(n =>
                     n.id === notificationId ? { ...n, read: true } : n
@@ -165,16 +165,14 @@ export const NotificationProvider = ({ children }) => {
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
 
-            // Then make the API call
-            const data = await apiCall(`/api/notifications/${notificationId}/read`, {
+            // Melakukan panggilan API untuk menandai sebagai dibaca
+            return await apiCall(`/api/notifications/${notificationId}/read`, {
                 method: 'PATCH'
             });
-
-            return data;
         } catch (error) {
             console.error('Error marking notification as read:', error);
 
-            // Revert optimistic update on error
+            // Mengembalikan perubahan UI jika terjadi kesalahan
             setNotifications(prev =>
                 prev.map(n =>
                     n.id === notificationId ? { ...n, read: false } : n
@@ -189,22 +187,21 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Mark all notifications as read
+    // Menandai semua notifikasi sebagai dibaca
     const markAllAsRead = async () => {
         try {
             setLoading(true);
             setError(null);
 
-            // Count current unread notifications for optimistic update
-            const currentUnreadCount = notifications.filter(n => !n.read).length;
-
-            // Optimistically update the UI first
+            // Menghitung jumlah notifikasi yang belum dibaca untuk pembaruan UI optimis
+            notifications.filter(n => !n.read).length;
+// Update UI secara optimis
             setNotifications(prev =>
                 prev.map(n => ({ ...n, read: true }))
             );
             setUnreadCount(0);
 
-            // Then make the API call
+            // Melakukan panggilan API untuk menandai semua sebagai dibaca
             await apiCall('/api/notifications/read-all', {
                 method: 'PATCH'
             });
@@ -213,10 +210,9 @@ export const NotificationProvider = ({ children }) => {
         } catch (error) {
             console.error('Error marking all notifications as read:', error);
 
-            // Revert optimistic update on error
+            // Mengembalikan pembaruan UI jika terjadi kesalahan
             setNotifications(prev =>
                 prev.map((n, index) => {
-                    // Find which notifications were originally unread
                     const originalNotification = notifications[index];
                     return originalNotification ? { ...n, read: originalNotification.read } : n;
                 })
@@ -230,23 +226,22 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Delete notification
+    // Menghapus notifikasi
     const deleteNotification = async (notificationId) => {
         try {
             setLoading(true);
             setError(null);
 
-            // Find the notification to check if it was unread
             const notification = notifications.find(n => n.id === notificationId);
             const wasUnread = notification && !notification.read;
 
-            // Optimistically update the UI first
+            // Update UI secara optimis
             setNotifications(prev => prev.filter(n => n.id !== notificationId));
             if (wasUnread) {
                 setUnreadCount(prev => Math.max(0, prev - 1));
             }
 
-            // Then make the API call - don't expect JSON response
+            // Melakukan panggilan API untuk menghapus notifikasi
             await apiCall(`/api/notifications/${notificationId}`, {
                 method: 'DELETE'
             });
@@ -255,7 +250,7 @@ export const NotificationProvider = ({ children }) => {
         } catch (error) {
             console.error('Error deleting notification:', error);
 
-            // Revert optimistic update on error by refetching
+            // Mengembalikan pembaruan UI jika terjadi kesalahan
             await fetchNotifications();
 
             setError(error.message);
@@ -265,41 +260,31 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // FIXED: Updated utility functions to handle all notification types
+    // Menampilkan ikon berdasarkan jenis notifikasi
     const getNotificationIcon = (type) => {
         switch (type) {
-            case 'NEW_REPORT':
-                return '📝';
-            case 'STATUS_UPDATE':
-                return '🔄';
-            case 'NEW_RESPONSE':
-                return '💬';
-            case 'STAFF_RESPONSE':
-                return '👨‍💼';
-            case 'ADMIN_RESPONSE':
-                return '👑';
-            default:
-                return '🔔';
+            case 'NEW_REPORT': return '📝';
+            case 'STATUS_UPDATE': return '🔄';
+            case 'NEW_RESPONSE': return '💬';
+            case 'STAFF_RESPONSE': return '👨‍💼';
+            case 'ADMIN_RESPONSE': return '👑';
+            default: return '🔔';
         }
     };
 
+    // Menampilkan warna berdasarkan jenis notifikasi
     const getNotificationColor = (type) => {
         switch (type) {
-            case 'NEW_REPORT':
-                return 'text-blue-600 bg-blue-50 border-blue-200';
-            case 'STATUS_UPDATE':
-                return 'text-orange-600 bg-orange-50 border-orange-200';
-            case 'NEW_RESPONSE':
-                return 'text-green-600 bg-green-50 border-green-200';
-            case 'STAFF_RESPONSE':
-                return 'text-purple-600 bg-purple-50 border-purple-200';
-            case 'ADMIN_RESPONSE':
-                return 'text-red-600 bg-red-50 border-red-200';
-            default:
-                return 'text-gray-600 bg-gray-50 border-gray-200';
+            case 'NEW_REPORT': return 'text-blue-600 bg-blue-50 border-blue-200';
+            case 'STATUS_UPDATE': return 'text-orange-600 bg-orange-50 border-orange-200';
+            case 'NEW_RESPONSE': return 'text-green-600 bg-green-50 border-green-200';
+            case 'STAFF_RESPONSE': return 'text-purple-600 bg-purple-50 border-purple-200';
+            case 'ADMIN_RESPONSE': return 'text-red-600 bg-red-50 border-red-200';
+            default: return 'text-gray-600 bg-gray-50 border-gray-200';
         }
     };
 
+    // Format tanggal untuk menampilkan waktu relatif
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
 
@@ -343,7 +328,7 @@ export const NotificationProvider = ({ children }) => {
         const interval = setInterval(() => {
             console.log('Refreshing notification count...');
             fetchUnreadCount().catch(console.error);
-        }, 10000); // 10 seconds for testing, change back to 30000 in production
+        },); // 10 seconds for testing, change back to 30000 in roduction
 
         return () => {
             console.log('Cleaning up notification interval');
@@ -351,6 +336,7 @@ export const NotificationProvider = ({ children }) => {
         };
     }, []);
 
+    // Context value yang akan dipakai oleh komponen lain
     const value = {
         notifications,
         unreadCount,

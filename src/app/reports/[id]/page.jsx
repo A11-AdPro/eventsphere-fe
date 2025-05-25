@@ -7,11 +7,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, MessageCircle, Send, Clock, CheckCircle, AlertCircle, FileText, User } from 'lucide-react';
 
 export default function ReportDetailPage() {
+    // Mengambil data autentikasi pengguna
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const params = useParams();
     const reportId = params.id;
 
+    // Mengambil data dan fungsi terkait laporan dari context
     const {
         selectedReport,
         loading,
@@ -25,15 +27,18 @@ export default function ReportDetailPage() {
         formatDate
     } = useReports();
 
+    // State untuk menangani status komponen dan input komentar
     const [mounted, setMounted] = useState(false);
     const [newComment, setNewComment] = useState('');
     const [commentLoading, setCommentLoading] = useState(false);
     const [commentError, setCommentError] = useState('');
 
+    // Effect untuk memastikan komponen telah dimuat sebelum memuat data
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Effect untuk memeriksa autentikasi dan memuat laporan saat pengguna sudah terautentikasi
     useEffect(() => {
         if (mounted && !authLoading) {
             if (!user) {
@@ -52,10 +57,12 @@ export default function ReportDetailPage() {
         }
     }, [user, router, authLoading, mounted, reportId]);
 
+    // Fungsi untuk kembali ke halaman laporan
     const handleBack = () => {
         router.push('/reports');
     };
 
+    // Fungsi untuk menambahkan komentar pada laporan
     const handleAddComment = async (e) => {
         e.preventDefault();
         if (!newComment.trim()) {
@@ -81,6 +88,7 @@ export default function ReportDetailPage() {
         }
     };
 
+    // Fungsi untuk mendapatkan ikon status laporan
     const getStatusIcon = (status) => {
         switch (status) {
             case 'PENDING':
@@ -94,6 +102,7 @@ export default function ReportDetailPage() {
         }
     };
 
+    // Fungsi untuk mendapatkan ikon peran
     const getRoleIcon = (role) => {
         switch (role) {
             case 'ADMIN':
@@ -107,6 +116,7 @@ export default function ReportDetailPage() {
         }
     };
 
+    // Fungsi untuk mendapatkan warna peran
     const getRoleColor = (role) => {
         switch (role) {
             case 'ADMIN':
@@ -122,6 +132,7 @@ export default function ReportDetailPage() {
         }
     };
 
+    // Menampilkan loading screen jika data belum siap
     if (!mounted || authLoading || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -133,10 +144,12 @@ export default function ReportDetailPage() {
         );
     }
 
+    // Jika user tidak memiliki akses
     if (!user || user.role !== 'ATTENDEE') {
         return null;
     }
 
+    // Menangani error atau laporan yang tidak ditemukan
     if (error || !selectedReport) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -182,8 +195,8 @@ export default function ReportDetailPage() {
                                 <span>{getReportStatusDisplay(selectedReport.status)}</span>
                             </div>
                             <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getCategoryColorClass(selectedReport.category)}`}>
-                {getReportCategoryDisplay(selectedReport.category)}
-              </span>
+                                {getReportCategoryDisplay(selectedReport.category)}
+                            </span>
                         </div>
                         <div className="text-sm text-gray-500">
                             Report ID: {selectedReport.id}
@@ -227,17 +240,17 @@ export default function ReportDetailPage() {
                                         <div className="flex items-center space-x-2">
                                             <span className="text-lg">{getRoleIcon(comment.responderRole)}</span>
                                             <span className={`px-2 py-1 rounded text-xs font-medium border ${getRoleColor(comment.responderRole)}`}>
-                        {comment.responderRole}
-                      </span>
+                                                {comment.responderRole}
+                                            </span>
                                             {comment.responderEmail && (
                                                 <span className="text-sm text-gray-600">
-                          {comment.responderEmail}
-                        </span>
+                                                    {comment.responderEmail}
+                                                </span>
                                             )}
                                         </div>
                                         <span className="text-sm text-gray-500">
-                      {formatDate(comment.createdAt)}
-                    </span>
+                                            {formatDate(comment.createdAt)}
+                                        </span>
                                     </div>
                                     <p className="text-gray-700 whitespace-pre-wrap">{comment.message}</p>
                                 </div>
@@ -251,71 +264,57 @@ export default function ReportDetailPage() {
                     </div>
 
                     {/* Add Comment Form */}
-                    {selectedReport.status !== 'RESOLVED' && (
-                        <form onSubmit={handleAddComment} className="border-t pt-6">
-                            <h3 className="font-medium text-gray-900 mb-3">Add a comment</h3>
+                    <form onSubmit={handleAddComment} className="border-t pt-6">
+                        <h3 className="font-medium text-gray-900 mb-3">Add a comment</h3>
 
-                            {commentError && (
-                                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                                    {commentError}
-                                </div>
-                            )}
+                        {commentError && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                                {commentError}
+                            </div>
+                        )}
 
-                            <div className="flex space-x-3">
-                                <div className="flex-shrink-0">
-                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <User className="w-4 h-4 text-blue-600" />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                  <textarea
-                      value={newComment}
-                      onChange={(e) => {
-                          setNewComment(e.target.value);
-                          setCommentError('');
-                      }}
-                      placeholder="Add additional information or ask a question..."
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  />
-                                    <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm text-gray-500">
-                      {newComment.length}/500 characters
-                    </span>
-                                        <button
-                                            type="submit"
-                                            disabled={commentLoading || !newComment.trim() || newComment.length > 500}
-                                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {commentLoading ? (
-                                                <>
-                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                    Posting...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Send className="w-4 h-4 mr-2" />
-                                                    Post Comment
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
+                        <div className="flex space-x-3">
+                            <div className="flex-shrink-0">
+                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <User className="w-4 h-4 text-blue-600" />
                                 </div>
                             </div>
-                        </form>
-                    )}
-
-                    {selectedReport.status === 'RESOLVED' && (
-                        <div className="border-t pt-6">
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center">
-                                <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                                <div>
-                                    <p className="text-green-800 font-medium">This report has been resolved</p>
-                                    <p className="text-green-700 text-sm">No further comments can be added.</p>
+                            <div className="flex-1">
+                                <textarea
+                                    value={newComment}
+                                    onChange={(e) => {
+                                        setNewComment(e.target.value);
+                                        setCommentError('');
+                                    }}
+                                    placeholder="Add additional information or ask a question..."
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                />
+                                <div className="flex items-center justify-between mt-2">
+                                    <span className="text-sm text-gray-500">
+                                        {newComment.length}/500 characters
+                                    </span>
+                                    <button
+                                        type="submit"
+                                        disabled={commentLoading || !newComment.trim() || newComment.length > 500}
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {commentLoading ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                Posting...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send className="w-4 h-4 mr-2" />
+                                                Post Comment
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    )}
+                    </form>
                 </div>
             </div>
         </div>

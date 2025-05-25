@@ -5,7 +5,9 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, MessageCircle, Send, Clock, CheckCircle, AlertCircle, FileText, User, Trash2 } from 'lucide-react';
 
+// Halaman detail laporan untuk Admin
 export default function AdminReportDetailPage() {
+    // State untuk menyimpan data dan status
     const { user, loading: authLoading, isAdmin } = useAuth();
     const router = useRouter();
     const params = useParams();
@@ -20,13 +22,14 @@ export default function AdminReportDetailPage() {
     const [commentError, setCommentError] = useState('');
     const [statusUpdating, setStatusUpdating] = useState(false);
 
-    // Constants
     const API_BASE_URL = 'http://localhost:8080';
 
+    // Hook untuk memeriksa apakah komponen sudah dimuat
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Hook untuk memeriksa autentikasi dan memuat laporan saat sudah terautentikasi
     useEffect(() => {
         if (mounted && !authLoading) {
             if (!user || !isAdmin()) {
@@ -40,12 +43,13 @@ export default function AdminReportDetailPage() {
         }
     }, [user, router, authLoading, mounted, reportId, isAdmin]);
 
-    // Helper function for API calls
+    // Fungsi untuk mendapatkan header autentikasi
     const getAuthHeaders = () => ({
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'application/json'
     });
 
+    // Fungsi umum untuk melakukan panggilan API
     const apiCall = async (url, options = {}) => {
         try {
             const response = await fetch(`${API_BASE_URL}${url}`, {
@@ -65,14 +69,15 @@ export default function AdminReportDetailPage() {
                     const errorText = await response.text();
                     if (errorText) errorMessage = errorText;
                 }
+
+                // Log the error message
+                console.error(errorMessage);
             }
 
-            // Handle empty responses (204 No Content)
             if (response.status === 204) {
                 return null;
             }
 
-            // Only parse JSON if content-type is application/json
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 return await response.json();
@@ -85,6 +90,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk mengambil laporan berdasarkan ID
     const fetchReportByIdAdmin = async (id) => {
         try {
             setLoading(true);
@@ -102,10 +108,12 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk kembali ke daftar laporan
     const handleBack = () => {
         router.push('/admin/reports');
     };
 
+    // Fungsi untuk menambahkan komentar pada laporan
     const handleAddComment = async (e) => {
         e.preventDefault();
         if (!newComment.trim()) {
@@ -122,7 +130,6 @@ export default function AdminReportDetailPage() {
             setCommentLoading(true);
             setCommentError('');
 
-            // Use direct API call instead of context
             const commentData = {
                 message: newComment.trim()
             };
@@ -133,8 +140,6 @@ export default function AdminReportDetailPage() {
             });
 
             setNewComment('');
-
-            // Refresh the report data
             await fetchReportByIdAdmin(reportId);
         } catch (err) {
             setCommentError(err.message || 'Failed to add comment');
@@ -143,6 +148,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk memperbarui status laporan
     const handleStatusUpdate = async (newStatus) => {
         try {
             setStatusUpdating(true);
@@ -151,7 +157,6 @@ export default function AdminReportDetailPage() {
                 method: 'PATCH'
             });
 
-            // Refresh the report data
             await fetchReportByIdAdmin(reportId);
         } catch (err) {
             console.error('Error updating status:', err);
@@ -161,6 +166,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk menghapus laporan
     const handleDeleteReport = async () => {
         if (window.confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
             try {
@@ -176,7 +182,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
-    // Utility functions
+    // Fungsi untuk format kategori laporan
     const getReportCategoryDisplay = (category) => {
         switch (category) {
             case 'PAYMENT': return 'Payment Issue';
@@ -187,6 +193,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk format status laporan
     const getReportStatusDisplay = (status) => {
         switch (status) {
             case 'PENDING': return 'Pending';
@@ -196,6 +203,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk mengubah warna status laporan
     const getStatusColorClass = (status) => {
         switch (status) {
             case 'PENDING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -205,6 +213,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk mengubah warna kategori laporan
     const getCategoryColorClass = (category) => {
         switch (category) {
             case 'PAYMENT': return 'bg-red-100 text-red-800 border-red-200';
@@ -215,6 +224,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk format tanggal
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         try {
@@ -230,6 +240,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk menampilkan ikon status laporan
     const getStatusIcon = (status) => {
         switch (status) {
             case 'PENDING': return <Clock className="w-5 h-5" />;
@@ -239,6 +250,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk menampilkan ikon peran
     const getRoleIcon = (role) => {
         switch (role) {
             case 'ADMIN': return '👑';
@@ -248,6 +260,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Fungsi untuk mengubah warna peran
     const getRoleColor = (role) => {
         switch (role) {
             case 'ADMIN': return 'text-red-600 bg-red-50 border-red-200';
@@ -258,6 +271,7 @@ export default function AdminReportDetailPage() {
         }
     };
 
+    // Menampilkan loading jika data belum siap
     if (!mounted || authLoading || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -269,10 +283,12 @@ export default function AdminReportDetailPage() {
         );
     }
 
+    // Menangani kasus ketika user tidak memiliki akses
     if (!user || !isAdmin()) {
         return null;
     }
 
+    // Menampilkan pesan jika laporan tidak ditemukan
     if (error || !selectedReport) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -364,11 +380,9 @@ export default function AdminReportDetailPage() {
                                     key={status}
                                     onClick={() => handleStatusUpdate(status)}
                                     disabled={statusUpdating || selectedReport.status === status}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                        selectedReport.status === status
-                                            ? 'bg-blue-600 text-white cursor-default'
-                                            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                                    } disabled:opacity-50`}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedReport.status === status
+                                        ? 'bg-blue-600 text-white cursor-default'
+                                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'} disabled:opacity-50`}
                                 >
                                     {statusUpdating ? 'Updating...' : getReportStatusDisplay(status)}
                                 </button>
@@ -393,9 +407,7 @@ export default function AdminReportDetailPage() {
                     <div className="space-y-4 mb-6">
                         {selectedReport.comments && selectedReport.comments.length > 0 ? (
                             selectedReport.comments.map((comment) => (
-                                <div key={comment.id} className={`border rounded-lg p-4 ${
-                                    comment.responderRole === 'ADMIN' ? 'bg-red-50 border-red-200' : ''
-                                }`}>
+                                <div key={comment.id} className={`border rounded-lg p-4 ${comment.responderRole === 'ADMIN' ? 'bg-red-50 border-red-200' : ''}`}>
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center space-x-2">
                                             <span className="text-lg">{getRoleIcon(comment.responderRole)}</span>

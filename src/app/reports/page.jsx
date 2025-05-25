@@ -9,8 +9,11 @@ import { Plus, MessageCircle, Clock, CheckCircle, AlertCircle, FileText, Calenda
 import Header from '../components/Header';
 
 export default function ReportsPage() {
+    // Mengambil data autentikasi pengguna
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
+
+    // Mengambil data laporan dan fungsi dari context
     const {
         reports,
         loading,
@@ -25,10 +28,12 @@ export default function ReportsPage() {
 
     const [mounted, setMounted] = useState(false);
 
+    // Effect untuk menandai komponen telah dimuat
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Effect untuk memeriksa autentikasi pengguna dan mengambil laporan
     useEffect(() => {
         if (mounted && !authLoading) {
             if (!user) {
@@ -41,19 +46,21 @@ export default function ReportsPage() {
                 return;
             }
 
-            // Load user's reports
             fetchMyReports().catch(console.error);
         }
     }, [user, router, authLoading, mounted]);
 
+    // Fungsi untuk mengarahkan ke halaman pembuatan laporan
     const handleCreateReport = () => {
         router.push('/reports/create');
     };
 
+    // Fungsi untuk melihat detail laporan
     const handleViewReport = (reportId) => {
         router.push(`/reports/${reportId}`);
     };
 
+    // Menampilkan loading jika data belum siap
     if (!mounted || authLoading || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -65,10 +72,12 @@ export default function ReportsPage() {
         );
     }
 
+    // Menangani jika user tidak memiliki akses
     if (!user || user.role !== 'ATTENDEE') {
         return null;
     }
 
+    // Menentukan ikon status laporan
     const getStatusIcon = (status) => {
         switch (status) {
             case 'PENDING':
@@ -84,6 +93,7 @@ export default function ReportsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            {/* Header dengan tombol aksi */}
             <Header
                 title="Reports"
                 subtitle="Get help with your issues"
@@ -106,6 +116,7 @@ export default function ReportsPage() {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    {/* Total Reports */}
                     <div className="bg-white overflow-hidden shadow rounded-lg">
                         <div className="p-5">
                             <div className="flex items-center">
@@ -122,6 +133,7 @@ export default function ReportsPage() {
                         </div>
                     </div>
 
+                    {/* Pending Reports */}
                     <div className="bg-white overflow-hidden shadow rounded-lg">
                         <div className="p-5">
                             <div className="flex items-center">
@@ -140,6 +152,7 @@ export default function ReportsPage() {
                         </div>
                     </div>
 
+                    {/* In Progress Reports */}
                     <div className="bg-white overflow-hidden shadow rounded-lg">
                         <div className="p-5">
                             <div className="flex items-center">
@@ -158,6 +171,7 @@ export default function ReportsPage() {
                         </div>
                     </div>
 
+                    {/* Resolved Reports */}
                     <div className="bg-white overflow-hidden shadow rounded-lg">
                         <div className="p-5">
                             <div className="flex items-center">

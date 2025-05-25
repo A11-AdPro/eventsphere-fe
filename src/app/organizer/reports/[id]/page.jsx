@@ -32,10 +32,12 @@ export default function OrganizerReportDetailPage() {
     const [statusUpdating, setStatusUpdating] = useState(false);
     const [reportData, setReportData] = useState(null);
 
+    // Menandai komponen telah dimuat
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Memastikan user telah terautentikasi dan mengambil data laporan
     useEffect(() => {
         if (mounted && !authLoading) {
             if (!user || !isOrganizer()) {
@@ -49,6 +51,7 @@ export default function OrganizerReportDetailPage() {
         }
     }, [user, router, authLoading, mounted, reportId, isOrganizer]);
 
+    // Fungsi untuk mengambil laporan organizer berdasarkan ID
     const fetchOrganizerReport = async (id) => {
         try {
             const response = await fetch(`http://localhost:8080/api/organizer/reports/${id}`, {
@@ -72,10 +75,12 @@ export default function OrganizerReportDetailPage() {
         }
     };
 
+    // Fungsi untuk kembali ke halaman laporan organizer
     const handleBack = () => {
         router.push('/organizer/reports');
     };
 
+    // Fungsi untuk menambahkan komentar pada laporan
     const handleAddComment = async (e) => {
         e.preventDefault();
         if (!newComment.trim()) {
@@ -116,6 +121,7 @@ export default function OrganizerReportDetailPage() {
         }
     };
 
+    // Fungsi untuk memperbarui status laporan
     const handleStatusUpdate = async (newStatus) => {
         try {
             setStatusUpdating(true);
@@ -142,6 +148,7 @@ export default function OrganizerReportDetailPage() {
         }
     };
 
+    // Fungsi untuk mendapatkan ikon status laporan
     const getStatusIcon = (status) => {
         switch (status) {
             case 'PENDING':
@@ -155,6 +162,7 @@ export default function OrganizerReportDetailPage() {
         }
     };
 
+    // Fungsi untuk mendapatkan ikon peran
     const getRoleIcon = (role) => {
         switch (role) {
             case 'ADMIN':
@@ -168,6 +176,7 @@ export default function OrganizerReportDetailPage() {
         }
     };
 
+    // Fungsi untuk mendapatkan warna peran
     const getRoleColor = (role) => {
         switch (role) {
             case 'ADMIN':
@@ -183,6 +192,7 @@ export default function OrganizerReportDetailPage() {
         }
     };
 
+    // Loading screen ketika data belum siap
     if (!mounted || authLoading || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -194,12 +204,14 @@ export default function OrganizerReportDetailPage() {
         );
     }
 
+    // Jika user tidak punya akses
     if (!user || !isOrganizer()) {
         return null;
     }
 
     const currentReport = reportData || selectedReport;
 
+    // Jika laporan tidak ditemukan atau error
     if (error || !currentReport) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -245,8 +257,8 @@ export default function OrganizerReportDetailPage() {
                                 <span>{getReportStatusDisplay(currentReport.status)}</span>
                             </div>
                             <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getCategoryColorClass(currentReport.category)}`}>
-                {getReportCategoryDisplay(currentReport.category)}
-              </span>
+                                {getReportCategoryDisplay(currentReport.category)}
+                            </span>
                         </div>
                         <div className="text-sm text-gray-500">
                             Report ID: {currentReport.id}
@@ -283,11 +295,9 @@ export default function OrganizerReportDetailPage() {
                                     key={status}
                                     onClick={() => handleStatusUpdate(status)}
                                     disabled={statusUpdating || currentReport.status === status}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                        currentReport.status === status
-                                            ? 'bg-green-600 text-white cursor-default'
-                                            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                                    } disabled:opacity-50`}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${currentReport.status === status
+                                        ? 'bg-green-600 text-white cursor-default'
+                                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'} disabled:opacity-50`}
                                 >
                                     {statusUpdating ? 'Updating...' : getReportStatusDisplay(status)}
                                 </button>
@@ -312,24 +322,22 @@ export default function OrganizerReportDetailPage() {
                     <div className="space-y-4 mb-6">
                         {currentReport.comments && currentReport.comments.length > 0 ? (
                             currentReport.comments.map((comment) => (
-                                <div key={comment.id} className={`border rounded-lg p-4 ${
-                                    comment.responderRole === 'ORGANIZER' ? 'bg-green-50 border-green-200' : ''
-                                }`}>
+                                <div key={comment.id} className={`border rounded-lg p-4 ${comment.responderRole === 'ORGANIZER' ? 'bg-green-50 border-green-200' : ''}`}>
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center space-x-2">
                                             <span className="text-lg">{getRoleIcon(comment.responderRole)}</span>
                                             <span className={`px-2 py-1 rounded text-xs font-medium border ${getRoleColor(comment.responderRole)}`}>
-                        {comment.responderRole}
-                      </span>
+                                                {comment.responderRole}
+                                            </span>
                                             {comment.responderEmail && (
                                                 <span className="text-sm text-gray-600">
-                          {comment.responderEmail}
-                        </span>
+                                                    {comment.responderEmail}
+                                                </span>
                                             )}
                                         </div>
                                         <span className="text-sm text-gray-500">
-                      {formatDate(comment.createdAt)}
-                    </span>
+                                            {formatDate(comment.createdAt)}
+                                        </span>
                                     </div>
                                     <p className="text-gray-700 whitespace-pre-wrap">{comment.message}</p>
                                 </div>
@@ -362,20 +370,20 @@ export default function OrganizerReportDetailPage() {
                                 </div>
                             </div>
                             <div className="flex-1">
-                <textarea
-                    value={newComment}
-                    onChange={(e) => {
-                        setNewComment(e.target.value);
-                        setCommentError('');
-                    }}
-                    placeholder="Provide a response to help resolve this user's issue..."
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                />
+                                <textarea
+                                    value={newComment}
+                                    onChange={(e) => {
+                                        setNewComment(e.target.value);
+                                        setCommentError('');
+                                    }}
+                                    placeholder="Provide a response to help resolve this user's issue..."
+                                    rows={4}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                                />
                                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm text-gray-500">
-                    {newComment.length}/500 characters
-                  </span>
+                                    <span className="text-sm text-gray-500">
+                                        {newComment.length}/500 characters
+                                    </span>
                                     <button
                                         type="submit"
                                         disabled={commentLoading || !newComment.trim() || newComment.length > 500}

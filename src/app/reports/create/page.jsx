@@ -24,7 +24,7 @@ export default function CreateReportPage() {
     const [events, setEvents] = useState([]);
     const [loadingEvents, setLoadingEvents] = useState(false);
 
-    // ADD THIS: Check if coming from event page
+    // Effect untuk memeriksa apakah datang dari halaman event
     useEffect(() => {
         const eventId = searchParams.get('eventId');
         const eventTitle = searchParams.get('eventTitle');
@@ -38,13 +38,14 @@ export default function CreateReportPage() {
         }
     }, [searchParams]);
 
-    // ADD THIS: Fetch user's attended events
+    // Effect untuk mengambil daftar event yang dihadiri oleh user
     useEffect(() => {
         if (mounted && user) {
             fetchUserEvents();
         }
     }, [mounted, user]);
 
+    // Mengambil event yang dihadiri oleh user
     const fetchUserEvents = async () => {
         try {
             setLoadingEvents(true);
@@ -70,6 +71,7 @@ export default function CreateReportPage() {
         setMounted(true);
     }, []);
 
+    // Memastikan user sudah terautentikasi dan memiliki akses
     useEffect(() => {
         if (mounted && !authLoading) {
             if (!user) {
@@ -79,11 +81,11 @@ export default function CreateReportPage() {
 
             if (user.role !== 'ATTENDEE') {
                 router.push('/login');
-
             }
         }
     }, [user, router, authLoading, mounted]);
 
+    // Daftar kategori laporan
     const categories = [
         { value: 'PAYMENT', label: 'Payment Issue', description: 'Problems with payments, refunds, or billing' },
         { value: 'TICKET', label: 'Ticket Issue', description: 'Issues with ticket purchase, access, or delivery' },
@@ -91,6 +93,7 @@ export default function CreateReportPage() {
         { value: 'OTHER', label: 'Other Issue', description: 'Any other concerns or questions' }
     ];
 
+    // Fungsi untuk menangani perubahan input form
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -101,7 +104,7 @@ export default function CreateReportPage() {
         setError(null);
     };
 
-    // ADD THIS: Handle event selection
+    // Fungsi untuk menangani perubahan event yang dipilih
     const handleEventChange = (e) => {
         const selectedEventId = e.target.value;
         if (selectedEventId === '') {
@@ -122,6 +125,7 @@ export default function CreateReportPage() {
         setError(null);
     };
 
+    // Validasi untuk step 1 (pemilihan kategori)
     const validateStep1 = () => {
         if (!formData.category) {
             setFormError('Please select a category for your report');
@@ -130,6 +134,7 @@ export default function CreateReportPage() {
         return true;
     };
 
+    // Melanjutkan ke step berikutnya
     const goToNextStep = () => {
         if (validateStep1()) {
             setFormError('');
@@ -137,11 +142,13 @@ export default function CreateReportPage() {
         }
     };
 
+    // Kembali ke step sebelumnya
     const goToPreviousStep = () => {
         setStep(1);
         setFormError('');
     };
 
+    // Fungsi untuk mengirim laporan
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormError('');
@@ -158,21 +165,17 @@ export default function CreateReportPage() {
         }
 
         try {
-            // UPDATED: Include event information
             const reportData = {
                 category: formData.category,
                 description: formData.description.trim()
             };
 
-            // Add event info if selected
             if (formData.eventId) {
                 reportData.eventId = formData.eventId;
                 reportData.eventTitle = formData.eventTitle;
             }
 
             await createReport(reportData);
-
-            // Success - redirect to reports list
             router.push('/reports?created=true');
         } catch (err) {
             console.error('Error creating report:', err);
@@ -184,6 +187,7 @@ export default function CreateReportPage() {
         router.push('/reports');
     };
 
+    // Menampilkan loading screen saat data belum siap
     if (!mounted || authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -195,6 +199,7 @@ export default function CreateReportPage() {
         );
     }
 
+    // Jika user tidak terautentikasi atau tidak memiliki hak akses
     if (!user || user.role !== 'ATTENDEE') {
         return null;
     }
@@ -223,11 +228,9 @@ export default function CreateReportPage() {
                             <p className="text-blue-100 mb-8">We're here to assist you with any issues or questions you may have.</p>
                         </div>
                         <div className="hidden md:block space-y-4 mt-10">
-                            {[
-                                { title: 'Quick Response', desc: 'We aim to respond to all reports within 24 hours' },
+                            {[{ title: 'Quick Response', desc: 'We aim to respond to all reports within 24 hours' },
                                 { title: 'Expert Support', desc: 'Our team is trained to help with all types of issues' },
-                                { title: 'Track Progress', desc: 'Monitor the status of your report in real-time' },
-                            ].map((item, idx) => (
+                                { title: 'Track Progress', desc: 'Monitor the status of your report in real-time' }].map((item, idx) => (
                                 <div key={idx} className="flex items-center">
                                     <div className="bg-blue-500 p-2 rounded-full">
                                         <CheckCircle className="h-6 w-6 text-white" />
@@ -257,15 +260,11 @@ export default function CreateReportPage() {
                         <div className="mb-8 flex items-center justify-between">
                             {[1, 2].map((s, i) => (
                                 <div key={s} className="flex items-center">
-                                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                                        step >= s ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-                                    }`}>
+                                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= s ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
                                         {s}
                                     </div>
                                     {i === 0 && (
-                                        <div className={`h-1 w-10 md:w-20 mx-2 ${
-                                            step > 1 ? 'bg-blue-600' : 'bg-gray-200'
-                                        }`} />
+                                        <div className={`h-1 w-10 md:w-20 mx-2 ${step > 1 ? 'bg-blue-600' : 'bg-gray-200'}`} />
                                     )}
                                 </div>
                             ))}
@@ -274,7 +273,6 @@ export default function CreateReportPage() {
                         <form onSubmit={handleSubmit}>
                             {step === 1 && (
                                 <div className="space-y-6">
-                                    {/* ADD THIS: Event Selection Section */}
                                     <div>
                                         <label className="block text-gray-700 text-sm font-medium mb-4">
                                             Is this report related to a specific event? (Optional)

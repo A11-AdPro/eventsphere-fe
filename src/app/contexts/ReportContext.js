@@ -2,8 +2,10 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 
+// Membuat context untuk laporan
 const ReportContext = createContext();
 
+// Hook untuk mengakses context laporan
 export const useReports = () => {
     const context = useContext(ReportContext);
     if (!context) {
@@ -12,17 +14,16 @@ export const useReports = () => {
     return context;
 };
 
+// Penyedia context laporan untuk aplikasi
 export const ReportProvider = ({ children }) => {
-    const [reports, setReports] = useState([]);
-    const [selectedReport, setSelectedReport] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [reports, setReports] = useState([]); // Menyimpan data laporan
+    const [selectedReport, setSelectedReport] = useState(null); // Menyimpan laporan yang dipilih
+    const [loading, setLoading] = useState(false); // Status loading
+    const [error, setError] = useState(null); // Menyimpan error jika ada
 
-    // CHANGE THIS LINE WHEN DEPLOYING
-    // Development: 'http://localhost:8080'
-    // Production:  'http://34.193.71.203'
-    const API_BASE_URL = 'http://localhost:8080';
+    const API_BASE_URL = 'http://localhost:8080'; // URL API untuk pengambilan data
 
+    // Mendapatkan token autentikasi dari localStorage
     const getAuthToken = () => {
         if (typeof window !== 'undefined') {
             return localStorage.getItem('token');
@@ -30,6 +31,7 @@ export const ReportProvider = ({ children }) => {
         return '';
     };
 
+    // Menyusun header untuk autentikasi
     const getAuthHeaders = () => {
         const token = getAuthToken();
         return {
@@ -38,6 +40,7 @@ export const ReportProvider = ({ children }) => {
         };
     };
 
+    // Fungsi umum untuk melakukan panggilan API
     const apiCall = async (url, options = {}) => {
         try {
             const response = await fetch(`${API_BASE_URL}${url}`, {
@@ -60,12 +63,12 @@ export const ReportProvider = ({ children }) => {
                 throw new Error(errorMessage);
             }
 
-            // Handle empty responses (204 No Content)
+            // Menangani respons kosong (204 No Content)
             if (response.status === 204) {
                 return null;
             }
 
-            // Only parse JSON if content-type is application/json
+            // Hanya parsing JSON jika content-type adalah application/json
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 return await response.json();
@@ -78,19 +81,18 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Create a new report (Attendee)
+    // Membuat laporan baru (Attendee)
     const createReport = async (reportData) => {
         try {
             setLoading(true);
             setError(null);
 
-            // reportData now includes: category, description, eventId (optional), eventTitle (optional)
             const data = await apiCall('/api/attendee/reports', {
                 method: 'POST',
                 body: JSON.stringify(reportData)
             });
 
-            // Refresh reports after creation
+            // Refresh laporan setelah pembuatan
             await fetchMyReports();
 
             return data;
@@ -103,7 +105,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Get my reports (Attendee)
+    // Mengambil laporan pengguna (Attendee)
     const fetchMyReports = async () => {
         try {
             setError(null);
@@ -124,7 +126,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Get report by ID (Attendee)
+    // Mengambil laporan berdasarkan ID (Attendee)
     const fetchReportById = async (reportId) => {
         try {
             setLoading(true);
@@ -143,7 +145,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Get report by ID (Admin)
+    // Mengambil laporan berdasarkan ID (Admin)
     const fetchReportByIdAdmin = async (reportId) => {
         try {
             setLoading(true);
@@ -162,7 +164,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Add comment to report
+    // Menambahkan komentar pada laporan
     const addComment = async (reportId, message) => {
         try {
             setLoading(true);
@@ -174,7 +176,7 @@ export const ReportProvider = ({ children }) => {
                 body: JSON.stringify(commentData)
             });
 
-            // Refresh report details to show new comment
+            // Refresh detail laporan untuk menampilkan komentar baru
             await fetchReportById(reportId);
 
             return data;
@@ -187,7 +189,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Admin functions
+    // Fungsi Admin: Mengambil semua laporan
     const fetchAllReports = async (status = null) => {
         try {
             setError(null);
@@ -213,7 +215,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Update report status (Admin)
+    // Fungsi Admin: Memperbarui status laporan
     const updateReportStatus = async (reportId, status) => {
         try {
             setLoading(true);
@@ -235,7 +237,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Admin add comment - FIXED VERSION
+    // Fungsi Admin: Menambahkan komentar pada laporan
     const addAdminComment = async (reportId, message) => {
         try {
             setLoading(true);
@@ -250,7 +252,7 @@ export const ReportProvider = ({ children }) => {
                 body: JSON.stringify(commentData)
             });
 
-            // Refresh the selected report instead of all reports for better UX
+            // Refresh laporan yang dipilih untuk memperbarui komentar
             if (selectedReport?.id === reportId) {
                 await fetchReportByIdAdmin(reportId);
             }
@@ -265,7 +267,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Delete report (Admin)
+    // Fungsi Admin: Menghapus laporan
     const deleteReport = async (reportId) => {
         try {
             setLoading(true);
@@ -287,7 +289,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Organizer functions
+    // Fungsi Organizer: Mengambil laporan organizer
     const fetchOrganizerReports = async (status = null) => {
         try {
             setError(null);
@@ -313,6 +315,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
+    // Fungsi Organizer: Mengambil laporan berdasarkan ID
     const fetchReportByIdOrganizer = async (reportId) => {
         try {
             setLoading(true);
@@ -331,6 +334,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
+    // Fungsi Organizer: Menambahkan komentar pada laporan
     const addOrganizerComment = async (reportId, message) => {
         try {
             setLoading(true);
@@ -345,7 +349,7 @@ export const ReportProvider = ({ children }) => {
                 body: JSON.stringify(commentData)
             });
 
-            // Refresh the selected report to show the new comment
+            // Refresh laporan yang dipilih untuk menampilkan komentar baru
             if (selectedReport?.id === reportId) {
                 await fetchReportByIdOrganizer(reportId);
             }
@@ -356,10 +360,11 @@ export const ReportProvider = ({ children }) => {
             setError(error.message);
             throw error;
         } finally {
-            setLoading(false); // MAKE SURE THIS IS HERE
+            setLoading(false);
         }
     };
 
+    // Fungsi Organizer: Memperbarui status laporan
     const updateOrganizerReportStatus = async (reportId, status) => {
         try {
             setLoading(true);
@@ -369,7 +374,6 @@ export const ReportProvider = ({ children }) => {
                 method: 'PATCH'
             });
 
-            // Refresh reports list
             await fetchOrganizerReports();
 
             return data;
@@ -382,6 +386,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
+    // Fungsi Organizer: Menghapus laporan
     const deleteOrganizerReport = async (reportId) => {
         try {
             setLoading(true);
@@ -391,7 +396,6 @@ export const ReportProvider = ({ children }) => {
                 method: 'DELETE'
             });
 
-            // Refresh organizer reports list
             await fetchOrganizerReports();
 
             return true;
@@ -404,62 +408,49 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
+    // Utility: Menampilkan kategori laporan
     const getReportCategoryDisplay = (category) => {
         switch (category) {
-            case 'PAYMENT':
-                return 'Payment Issue';
-            case 'TICKET':
-                return 'Ticket Issue';
-            case 'EVENT':
-                return 'Event Issue';
-            case 'OTHER':
-                return 'Other Issue';
-            default:
-                return category;
+            case 'PAYMENT': return 'Payment Issue';
+            case 'TICKET': return 'Ticket Issue';
+            case 'EVENT': return 'Event Issue';
+            case 'OTHER': return 'Other Issue';
+            default: return category;
         }
     };
 
+    // Utility: Menampilkan status laporan
     const getReportStatusDisplay = (status) => {
         switch (status) {
-            case 'PENDING':
-                return 'Pending';
-            case 'ON_PROGRESS':
-                return 'On Progress';
-            case 'RESOLVED':
-                return 'Resolved';
-            default:
-                return status;
+            case 'PENDING': return 'Pending';
+            case 'ON_PROGRESS': return 'On Progress';
+            case 'RESOLVED': return 'Resolved';
+            default: return status;
         }
     };
 
+    // Utility: Mengubah warna status
     const getStatusColorClass = (status) => {
         switch (status) {
-            case 'PENDING':
-                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'ON_PROGRESS':
-                return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'RESOLVED':
-                return 'bg-green-100 text-green-800 border-green-200';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'PENDING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'ON_PROGRESS': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'RESOLVED': return 'bg-green-100 text-green-800 border-green-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
         }
     };
 
+    // Utility: Mengubah warna kategori
     const getCategoryColorClass = (category) => {
         switch (category) {
-            case 'PAYMENT':
-                return 'bg-red-100 text-red-800 border-red-200';
-            case 'TICKET':
-                return 'bg-purple-100 text-purple-800 border-purple-200';
-            case 'EVENT':
-                return 'bg-orange-100 text-orange-800 border-orange-200';
-            case 'OTHER':
-                return 'bg-gray-100 text-gray-800 border-gray-200';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'PAYMENT': return 'bg-red-100 text-red-800 border-red-200';
+            case 'TICKET': return 'bg-purple-100 text-purple-800 border-purple-200';
+            case 'EVENT': return 'bg-orange-100 text-orange-800 border-orange-200';
+            case 'OTHER': return 'bg-gray-100 text-gray-800 border-gray-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
         }
     };
 
+    // Utility: Format tanggal
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
 
@@ -480,7 +471,7 @@ export const ReportProvider = ({ children }) => {
     useEffect(() => {
         const token = getAuthToken();
         if (token) {
-        }
+    }
     }, []);
 
     const value = {
@@ -488,27 +479,27 @@ export const ReportProvider = ({ children }) => {
         selectedReport,
         loading,
         error,
-        // Attendee functions
+        // Fungsi Attendee
         createReport,
         fetchMyReports,
         fetchReportById,
         addComment,
 
-        // Admin functions
+        // Fungsi Admin
         fetchAllReports,
         fetchReportByIdAdmin,
         updateReportStatus,
         addAdminComment,
         deleteReport,
 
-        // Organizer functions
+        // Fungsi Organizer
         fetchOrganizerReports,
         fetchReportByIdOrganizer,
         addOrganizerComment,
         updateOrganizerReportStatus,
         deleteOrganizerReport,
 
-        // Utility functions
+        // Fungsi Utilitas
         getReportCategoryDisplay,
         getReportStatusDisplay,
         getStatusColorClass,
