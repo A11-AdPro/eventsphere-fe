@@ -5,11 +5,13 @@ import { TopUpProvider } from './contexts/TopUpContext';
 import { TransactionProvider } from './contexts/TransactionContext';
 import { TicketProvider } from './contexts/TicketContext';
 import { EventProvider } from './contexts/EventContext';
+import { ReportProvider } from './contexts/ReportContext';
+import './globals.css';
+
+import { NotificationProvider } from './contexts/NotificationContext';
 import { AdminUserProvider } from './contexts/AdminUserContext';
 import { AdminTicketProvider } from './contexts/AdminTicketContext';
 import { AdminTransactionProvider } from './contexts/AdminTransactionContext';
-
-import './globals.css';
 
 export default function RootLayout({ children }) {
   return (
@@ -23,7 +25,11 @@ export default function RootLayout({ children }) {
                   <TicketProvider>
                     <TopUpProvider>
                       <TransactionProvider>
-                        {children}
+                        <ReportProvider>
+                          <NotificationProvider>
+                            {children}
+                          </NotificationProvider>
+                        </ReportProvider>
                       </TransactionProvider>
                     </TopUpProvider>
                   </TicketProvider>

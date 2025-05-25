@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEvents } from '../contexts/EventContext';
-import { Calendar, MapPin, Users, Plus } from 'lucide-react';
+import { Calendar, MapPin, Users, Plus, ArrowLeft } from 'lucide-react';
 
 const EventsPage = () => {
   const router = useRouter();
@@ -32,6 +32,18 @@ const EventsPage = () => {
   const handleCreateEvent = () => {
     router.push('/events/create');
   };
+  
+  const handleRefresh = async () => {
+    try {
+      await fetchEvents();
+    } catch (error) {
+      console.error('Error refreshing events:', error);
+    }
+  }; 
+
+  const handleBackToDashboard = () => {
+    router.push('/');
+  };
 
   if (loading && events.length === 0) {
     return (
@@ -50,19 +62,37 @@ const EventsPage = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Events</h1>
-              <p className="text-gray-600 mt-1">Discover amazing events happening around you</p>
-            </div>
-            {userRole === 'ORGANIZER' && (
+            <div className="flex items-center">
               <button
-                onClick={handleCreateEvent}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                onClick={handleBackToDashboard}
+                className="flex items-center text-gray-600 hover:text-gray-900 mr-4"
               >
-                <Plus className="w-4 h-4" />
-                Create Event
+                <ArrowLeft className="w-5 h-5 mr-2" />
               </button>
-            )}
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Events</h1>
+                <p className="text-gray-600 mt-1">Discover amazing events happening around you</p>
+              </div>
+              {userRole === 'ORGANIZER' && (
+                <button
+                  onClick={handleCreateEvent}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Event
+                </button>
+              )}
+            </div>
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {loading ? 'Loading...' : 'Refresh'}
+            </button>
           </div>
         </div>
       </div>
