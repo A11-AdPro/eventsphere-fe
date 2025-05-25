@@ -12,7 +12,9 @@ export default function RegisterPage() {
         confirmPassword: '',
         fullName: '',
         acceptTerms: false,
+        role: 'ATTENDEE', // default role
     });
+
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1);
@@ -87,8 +89,9 @@ export default function RegisterPage() {
             email: email.trim(),
             password,
             fullName: fullName.trim(),
-            role: 'ATTENDEE', // Default role
+            role: formData.role,
         });
+
 
         setLoading(false);
 
@@ -161,20 +164,30 @@ export default function RegisterPage() {
                     <form onSubmit={handleSubmit}>
                         {step === 1 && (
                             <div className="space-y-6">
-                                <InputField 
-                                    label="Nama Lengkap" 
-                                    id="fullName" 
-                                    value={formData.fullName} 
-                                    onChange={handleChange} 
+                                <select
+                                    name="role"
+                                    value={formData.role}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 rounded-lg border border-gray-300"
+                                >
+                                    <option value="ATTENDEE">Attendee</option>
+                                    <option value="ORGANIZER">Organizer</option>
+                                </select>
+
+                                <InputField
+                                    label="Nama Lengkap"
+                                    id="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleChange}
                                     placeholder="Masukkan nama lengkap Anda"
                                     required
                                 />
-                                <InputField 
-                                    label="Email" 
-                                    id="email" 
-                                    type="email" 
-                                    value={formData.email} 
-                                    onChange={handleChange} 
+                                <InputField
+                                    label="Email"
+                                    id="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
                                     placeholder="contoh@email.com"
                                     required
                                 />
@@ -190,32 +203,32 @@ export default function RegisterPage() {
 
                         {step === 2 && (
                             <div className="space-y-6">
-                                <InputField 
-                                    label="Password" 
-                                    id="password" 
-                                    type="password" 
-                                    value={formData.password} 
-                                    onChange={handleChange} 
+                                <InputField
+                                    label="Password"
+                                    id="password"
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
                                     placeholder="Minimal 8 karakter"
                                     required
                                 />
-                                <InputField 
-                                    label="Konfirmasi Password" 
-                                    id="confirmPassword" 
-                                    type="password" 
-                                    value={formData.confirmPassword} 
-                                    onChange={handleChange} 
+                                <InputField
+                                    label="Konfirmasi Password"
+                                    id="confirmPassword"
+                                    type="password"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
                                     placeholder="Ulangi password yang sama"
                                     required
                                 />
                                 <div className="flex items-start">
-                                    <input 
-                                        id="acceptTerms" 
-                                        name="acceptTerms" 
-                                        type="checkbox" 
+                                    <input
+                                        id="acceptTerms"
+                                        name="acceptTerms"
+                                        type="checkbox"
                                         checked={formData.acceptTerms}
-                                        onChange={handleChange} 
-                                        className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" 
+                                        onChange={handleChange}
+                                        className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                                         required
                                     />
                                     <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-700">

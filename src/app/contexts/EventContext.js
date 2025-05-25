@@ -44,7 +44,6 @@ export const EventProvider = ({ children }) => {
       }
 
       const data = await response.json();
-      console.log('Fetched events:', data);
       setEvents(data);
       return data;
     } catch (err) {
