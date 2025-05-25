@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,7 +41,7 @@ export default function OrganizerLayout({ children }) {
 
     const bottomNavigationItems = [
         { id: 'ratings', label: 'Reviews & Ratings', icon: '⭐', href: '/ratings' },
-        { id: 'reports', label: 'Support', icon: '🆘', href: '/reports' },
+        { id: 'reports', label: 'Support', icon: '🆘', href: '/organizer/reports' },
         { id: 'add-ticket', label: 'Add Ticket', icon: '➕🎟️', href: '/organizer/tickets/ticketmanagement' }
     ];
 
@@ -93,3 +94,46 @@ export default function OrganizerLayout({ children }) {
                     </div>
                 </div>
             </header>
+
+            <div className="bg-white border-b mt-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="w-full">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                            {topNavigationItems.map((item) => (
+                                <Link
+                                    key={item.id}
+                                    href={item.href}
+                                    className="flex items-center justify-center p-6 bg-gray-100 rounded-lg shadow-lg hover:bg-green-600 hover:text-white transition duration-200"
+                                >
+                                    <div className="text-center">
+                                        <span className="text-3xl">{item.icon}</span>
+                                        <p className="mt-2 text-lg font-medium">{item.label}</p>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            {bottomNavigationItems.map((item) => (
+                                <Link
+                                    key={item.id}
+                                    href={item.href}
+                                    className="flex items-center justify-center p-6 bg-gray-100 rounded-lg shadow-lg hover:bg-green-600 hover:text-white transition duration-200"
+                                >
+                                    <div className="text-center">
+                                        <span className="text-3xl">{item.icon}</span>
+                                        <p className="mt-2 text-lg font-medium">{item.label}</p>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                {children}
+            </main>
+        </div>
+    );
+}
