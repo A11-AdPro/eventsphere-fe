@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useReports } from '../../contexts/ReportContext';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { useReports } from '@/app/contexts/ReportContext';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, MessageCircle, Send, Clock, CheckCircle, AlertCircle, FileText, User } from 'lucide-react';
 
@@ -397,18 +397,6 @@ export default function OrganizerReportDetailPage() {
                             </div>
                         </div>
                     </form>
-
-                    {/* Organizer Guidelines */}
-                    <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 className="font-medium text-blue-900 mb-2">Guidelines for Organizers</h4>
-                        <ul className="text-sm text-blue-800 space-y-1">
-                            <li>• Respond promptly to user concerns to maintain good event reputation</li>
-                            <li>• Update status to "On Progress" when you start investigating</li>
-                            <li>• Provide clear, helpful responses that address the user's specific issue</li>
-                            <li>• Mark as "Resolved" only when the issue is completely addressed</li>
-                            <li>• For complex issues, consider escalating to admins or providing direct contact</li>
-                        </ul>
-                    </div>
                 </div>
             </div>
         </div>

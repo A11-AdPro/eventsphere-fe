@@ -18,7 +18,6 @@ export default function AdminReportsPage() {
         updateReportStatus,
         deleteReport,
         getReportCategoryDisplay,
-        getReportStatusDisplay,
         getStatusColorClass,
         getCategoryColorClass,
         formatDate
@@ -84,19 +83,6 @@ export default function AdminReportsPage() {
 
     const handleViewReport = (reportId) => {
         router.push(`/admin/reports/${reportId}`);
-    };
-
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case 'PENDING':
-                return <Clock className="w-4 h-4" />;
-            case 'ON_PROGRESS':
-                return <AlertCircle className="w-4 h-4" />;
-            case 'RESOLVED':
-                return <CheckCircle className="w-4 h-4" />;
-            default:
-                return <FileText className="w-4 h-4" />;
-        }
     };
 
     if (!mounted || authLoading || loading) {

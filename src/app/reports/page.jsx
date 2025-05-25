@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useReports } from '../contexts/ReportContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, MessageCircle, Clock, CheckCircle, AlertCircle, FileText } from 'lucide-react';
+import { Plus, MessageCircle, Clock, CheckCircle, AlertCircle, FileText, Calendar } from 'lucide-react';
 import Header from '../components/Header';
 
 export default function ReportsPage() {
@@ -214,8 +214,15 @@ export default function ReportsPage() {
                                                     <span>{getReportStatusDisplay(report.status)}</span>
                                                 </div>
                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColorClass(report.category)}`}>
-                          {getReportCategoryDisplay(report.category)}
-                        </span>
+                                                    {getReportCategoryDisplay(report.category)}
+                                                </span>
+                                                {/* Event Badge */}
+                                                {report.eventId && (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                                                        <Calendar className="w-3 h-3 mr-1" />
+                                                        Event
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex items-center text-sm text-gray-500">
                                                 <MessageCircle className="w-4 h-4 mr-1" />
@@ -227,7 +234,17 @@ export default function ReportsPage() {
                                             {report.shortDescription || 'Report'}
                                         </h4>
 
-                                        <p className="text-sm text-gray-600 mb-2">
+                                        {/* Event Title */}
+                                        {report.eventTitle && (
+                                            <div className="flex items-center mb-2">
+                                                <Calendar className="w-4 h-4 text-purple-600 mr-1" />
+                                                <p className="text-sm text-purple-600 font-medium">
+                                                    Event: {report.eventTitle}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        <p className="text-sm text-gray-600">
                                             Created: {formatDate(report.createdAt)}
                                         </p>
                                     </div>

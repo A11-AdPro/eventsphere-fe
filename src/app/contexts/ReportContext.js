@@ -84,6 +84,7 @@ export const ReportProvider = ({ children }) => {
             setLoading(true);
             setError(null);
 
+            // reportData now includes: category, description, eventId (optional), eventTitle (optional)
             const data = await apiCall('/api/attendee/reports', {
                 method: 'POST',
                 body: JSON.stringify(reportData)
@@ -212,7 +213,7 @@ export const ReportProvider = ({ children }) => {
         }
     };
 
-    // Update report status (Admin/Organizer)
+    // Update report status (Admin)
     const updateReportStatus = async (reportId, status) => {
         try {
             setLoading(true);
@@ -344,7 +345,7 @@ export const ReportProvider = ({ children }) => {
                 body: JSON.stringify(commentData)
             });
 
-            // Refresh the selected report
+            // Refresh the selected report to show the new comment
             if (selectedReport?.id === reportId) {
                 await fetchReportByIdOrganizer(reportId);
             }
@@ -355,7 +356,7 @@ export const ReportProvider = ({ children }) => {
             setError(error.message);
             throw error;
         } finally {
-            setLoading(false);
+            setLoading(false); // MAKE SURE THIS IS HERE
         }
     };
 
@@ -374,6 +375,28 @@ export const ReportProvider = ({ children }) => {
             return data;
         } catch (error) {
             console.error('Error updating organizer report status:', error);
+            setError(error.message);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const deleteOrganizerReport = async (reportId) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            await apiCall(`/api/organizer/reports/${reportId}`, {
+                method: 'DELETE'
+            });
+
+            // Refresh organizer reports list
+            await fetchOrganizerReports();
+
+            return true;
+        } catch (error) {
+            console.error('Error deleting organizer report:', error);
             setError(error.message);
             throw error;
         } finally {
@@ -483,6 +506,7 @@ export const ReportProvider = ({ children }) => {
         fetchReportByIdOrganizer,
         addOrganizerComment,
         updateOrganizerReportStatus,
+        deleteOrganizerReport,
 
         // Utility functions
         getReportCategoryDisplay,

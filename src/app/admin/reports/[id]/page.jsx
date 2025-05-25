@@ -65,7 +65,6 @@ export default function AdminReportDetailPage() {
                     const errorText = await response.text();
                     if (errorText) errorMessage = errorText;
                 }
-                throw new Error(errorMessage);
             }
 
             // Handle empty responses (204 No Content)

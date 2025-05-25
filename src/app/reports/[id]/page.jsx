@@ -22,8 +22,7 @@ export default function ReportDetailPage() {
         getReportStatusDisplay,
         getStatusColorClass,
         getCategoryColorClass,
-        formatDate,
-        setError
+        formatDate
     } = useReports();
 
     const [mounted, setMounted] = useState(false);

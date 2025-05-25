@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useReports } from '../../contexts/ReportContext';
 import { useRouter } from 'next/navigation';
-import { Filter, Search, Eye, MessageCircle, Clock, CheckCircle, AlertCircle, FileText, ArrowLeft } from 'lucide-react';
+import { Filter, Search, Eye, Trash2, MessageCircle, Clock, CheckCircle, AlertCircle, FileText, ArrowLeft } from 'lucide-react';
 import Header from '../../components/Header';
 
 export default function OrganizerReportsPage() {
@@ -14,10 +14,10 @@ export default function OrganizerReportsPage() {
         reports,
         loading,
         error,
-        fetchAllReports,
-        updateReportStatus,
+        fetchOrganizerReports,
+        updateOrganizerReportStatus,
+        deleteOrganizerReport,
         getReportCategoryDisplay,
-        getReportStatusDisplay,
         getStatusColorClass,
         getCategoryColorClass,
         formatDate
@@ -39,8 +39,7 @@ export default function OrganizerReportsPage() {
                 return;
             }
 
-            // Load reports - organizers can see all reports but with limited actions
-            fetchAllReports().catch(console.error);
+            fetchOrganizerReports().catch(console.error);
         }
     }, [user, router, authLoading, mounted, isOrganizer]);
 
@@ -56,7 +55,8 @@ export default function OrganizerReportsPage() {
             filtered = filtered.filter(report =>
                 report.userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 report.shortDescription?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                getReportCategoryDisplay(report.category).toLowerCase().includes(searchTerm.toLowerCase())
+                getReportCategoryDisplay(report.category).toLowerCase().includes(searchTerm.toLowerCase()) ||
+                report.eventTitle?.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
 
@@ -65,44 +65,27 @@ export default function OrganizerReportsPage() {
 
     const handleStatusChange = async (reportId, newStatus) => {
         try {
-            // Use organizer endpoint for status updates
-            const response = await fetch(`http://localhost:8080/api/organizer/reports/${reportId}/status?status=${newStatus}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to update status');
-            }
-
-            // Refresh reports
-            await fetchAllReports();
+            await updateOrganizerReportStatus(reportId, newStatus);
         } catch (err) {
             console.error('Error updating status:', err);
             alert('Failed to update report status. Please try again.');
         }
     };
 
-    const handleViewReport = (reportId) => {
-        router.push(`/organizer/reports/${reportId}`);
-    };
-
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case 'PENDING':
-                return <Clock className="w-4 h-4" />;
-            case 'ON_PROGRESS':
-                return <AlertCircle className="w-4 h-4" />;
-            case 'RESOLVED':
-                return <CheckCircle className="w-4 h-4" />;
-            default:
-                return <FileText className="w-4 h-4" />;
+    const handleDeleteReport = async (reportId) => {
+        if (window.confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+            try {
+                await deleteOrganizerReport(reportId);
+            } catch (err) {
+                console.error('Error deleting report:', err);
+                alert('Failed to delete report. Please try again.');
+            }
         }
     };
 
+    const handleViewReport = (reportId) => {
+        router.push(`/organizer/reports/${reportId}`);
+    };
     if (!mounted || authLoading || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -148,8 +131,8 @@ export default function OrganizerReportsPage() {
                         </div>
                         <div className="ml-3">
                             <p className="text-sm text-blue-700">
-                                <strong>Organizer Access:</strong> You can view and respond to reports related to your events.
-                                You can update report status and add comments to help resolve user issues.
+                                <strong>Organizer Access:</strong> You can view, respond to, update status, and delete reports related to your events.
+                                You have full control over reports for events you organize.
                             </p>
                         </div>
                     </div>
@@ -252,7 +235,7 @@ export default function OrganizerReportsPage() {
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                                 <input
                                     type="text"
-                                    placeholder="Search by user email, description, or category..."
+                                    placeholder="Search by user email, description, event, or category..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -311,11 +294,23 @@ export default function OrganizerReportsPage() {
                                                 <div className="text-sm font-medium text-gray-900">
                                                     {report.userEmail}
                                                 </div>
-                                                <div className="mt-1">
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getCategoryColorClass(report.category)}`}>
-                              {getReportCategoryDisplay(report.category)}
-                            </span>
+                                                <div className="mt-1 flex items-center space-x-2">
+                                                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getCategoryColorClass(report.category)}`}>
+                                                        {getReportCategoryDisplay(report.category)}
+                                                    </span>
+                                                    {/* Event Badge */}
+                                                    {report.eventId && (
+                                                        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                                                            Event
+                                                        </span>
+                                                    )}
                                                 </div>
+                                                {/* Event Title */}
+                                                {report.eventTitle && (
+                                                    <div className="text-xs text-purple-600 mt-1">
+                                                        Event: {report.eventTitle}
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
@@ -343,14 +338,27 @@ export default function OrganizerReportsPage() {
                                                 {report.commentCount || 0}
                                             </div>
                                         </td>
+                                        {/* FIXED: Added delete button back with context function */}
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button
-                                                onClick={() => handleViewReport(report.id)}
-                                                className="text-green-600 hover:text-green-900 p-1"
-                                                title="View Details & Respond"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex items-center justify-end space-x-2">
+                                                <button
+                                                    onClick={() => handleViewReport(report.id)}
+                                                    className="text-green-600 hover:text-green-900 p-1"
+                                                    title="View Details & Respond"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                                {/* Delete Button for Event Reports */}
+                                                {report.eventId && (
+                                                    <button
+                                                        onClick={() => handleDeleteReport(report.id)}
+                                                        className="text-red-600 hover:text-red-900 p-1"
+                                                        title="Delete Report"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

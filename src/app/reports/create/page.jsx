@@ -3,21 +3,68 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useReports } from '../../contexts/ReportContext';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeft, FileText, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
 
 export default function CreateReportPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { createReport, loading, error, setError } = useReports();
 
     const [mounted, setMounted] = useState(false);
     const [formData, setFormData] = useState({
         category: '',
-        description: ''
+        description: '',
+        eventId: null,
+        eventTitle: ''
     });
     const [formError, setFormError] = useState('');
     const [step, setStep] = useState(1);
+    const [events, setEvents] = useState([]);
+    const [loadingEvents, setLoadingEvents] = useState(false);
+
+    // ADD THIS: Check if coming from event page
+    useEffect(() => {
+        const eventId = searchParams.get('eventId');
+        const eventTitle = searchParams.get('eventTitle');
+
+        if (eventId && eventTitle) {
+            setFormData(prev => ({
+                ...prev,
+                eventId: parseInt(eventId),
+                eventTitle: decodeURIComponent(eventTitle)
+            }));
+        }
+    }, [searchParams]);
+
+    // ADD THIS: Fetch user's attended events
+    useEffect(() => {
+        if (mounted && user) {
+            fetchUserEvents();
+        }
+    }, [mounted, user]);
+
+    const fetchUserEvents = async () => {
+        try {
+            setLoadingEvents(true);
+            const response = await fetch('http://localhost:8080/api/events', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const eventsData = await response.json();
+                setEvents(eventsData);
+            }
+        } catch (err) {
+            console.error('Error fetching events:', err);
+        } finally {
+            setLoadingEvents(false);
+        }
+    };
 
     useEffect(() => {
         setMounted(true);
@@ -32,7 +79,7 @@ export default function CreateReportPage() {
 
             if (user.role !== 'ATTENDEE') {
                 router.push('/login');
-                return;
+
             }
         }
     }, [user, router, authLoading, mounted]);
@@ -50,6 +97,27 @@ export default function CreateReportPage() {
             ...prev,
             [name]: value
         }));
+        setFormError('');
+        setError(null);
+    };
+
+    // ADD THIS: Handle event selection
+    const handleEventChange = (e) => {
+        const selectedEventId = e.target.value;
+        if (selectedEventId === '') {
+            setFormData(prev => ({
+                ...prev,
+                eventId: null,
+                eventTitle: ''
+            }));
+        } else {
+            const selectedEvent = events.find(event => event.id === parseInt(selectedEventId));
+            setFormData(prev => ({
+                ...prev,
+                eventId: parseInt(selectedEventId),
+                eventTitle: selectedEvent ? selectedEvent.title : ''
+            }));
+        }
         setFormError('');
         setError(null);
     };
@@ -90,10 +158,19 @@ export default function CreateReportPage() {
         }
 
         try {
-            await createReport({
+            // UPDATED: Include event information
+            const reportData = {
                 category: formData.category,
                 description: formData.description.trim()
-            });
+            };
+
+            // Add event info if selected
+            if (formData.eventId) {
+                reportData.eventId = formData.eventId;
+                reportData.eventTitle = formData.eventTitle;
+            }
+
+            await createReport(reportData);
 
             // Success - redirect to reports list
             router.push('/reports?created=true');
@@ -197,6 +274,42 @@ export default function CreateReportPage() {
                         <form onSubmit={handleSubmit}>
                             {step === 1 && (
                                 <div className="space-y-6">
+                                    {/* ADD THIS: Event Selection Section */}
+                                    <div>
+                                        <label className="block text-gray-700 text-sm font-medium mb-4">
+                                            Is this report related to a specific event? (Optional)
+                                        </label>
+
+                                        {formData.eventId && formData.eventTitle && (
+                                            <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                                                <div className="flex items-center">
+                                                    <Calendar className="w-4 h-4 text-purple-600 mr-2" />
+                                                    <span className="text-sm font-medium text-purple-800">
+                                                        Pre-selected: {formData.eventTitle}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <select
+                                            value={formData.eventId || ''}
+                                            onChange={handleEventChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            disabled={loadingEvents}
+                                        >
+                                            <option value="">General Report (Not event-specific)</option>
+                                            {events.map((event) => (
+                                                <option key={event.id} value={event.id}>
+                                                    {event.title}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        {loadingEvents && (
+                                            <p className="text-sm text-gray-500 mt-1">Loading events...</p>
+                                        )}
+                                    </div>
+
                                     <div>
                                         <label className="block text-gray-700 text-sm font-medium mb-4">
                                             What type of issue are you experiencing? <span className="text-red-500">*</span>
@@ -268,10 +381,15 @@ export default function CreateReportPage() {
                                             <div className="flex-shrink-0">
                                                 <FileText className="h-5 w-5 text-blue-400" />
                                             </div>
-                                            <div className="ml-3">
+                                            <div className="ml-3 space-y-1">
                                                 <p className="text-sm text-blue-700">
                                                     <strong>Selected Category:</strong> {categories.find(c => c.value === formData.category)?.label}
                                                 </p>
+                                                {formData.eventId && (
+                                                    <p className="text-sm text-blue-700">
+                                                        <strong>Related Event:</strong> {formData.eventTitle}
+                                                    </p>
+                                                )}
                                                 <p className="text-sm text-blue-600 mt-1">
                                                     {categories.find(c => c.value === formData.category)?.description}
                                                 </p>

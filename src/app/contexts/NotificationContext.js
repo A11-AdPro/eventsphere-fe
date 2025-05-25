@@ -90,6 +90,7 @@ export const NotificationProvider = ({ children }) => {
             const data = await apiCall('/api/notifications');
 
             if (Array.isArray(data)) {
+                console.log('Fetched notifications:', data); // Debug log
                 setNotifications(data);
                 setUnreadCount(data.filter(n => !n.read).length);
             } else {
@@ -113,6 +114,7 @@ export const NotificationProvider = ({ children }) => {
             const data = await apiCall('/api/notifications/unread');
 
             if (Array.isArray(data)) {
+                console.log('Fetched unread notifications:', data); // Debug log
                 setUnreadCount(data.length);
             } else {
                 setUnreadCount(0);
@@ -134,6 +136,7 @@ export const NotificationProvider = ({ children }) => {
             const data = await apiCall('/api/notifications/count');
 
             if (data && typeof data.unreadCount === 'number') {
+                console.log('Unread count:', data.unreadCount); // Debug log
                 setUnreadCount(data.unreadCount);
             } else {
                 setUnreadCount(0);
@@ -262,7 +265,7 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Utility functions
+    // FIXED: Updated utility functions to handle all notification types
     const getNotificationIcon = (type) => {
         switch (type) {
             case 'NEW_REPORT':
@@ -271,6 +274,10 @@ export const NotificationProvider = ({ children }) => {
                 return '🔄';
             case 'NEW_RESPONSE':
                 return '💬';
+            case 'STAFF_RESPONSE':
+                return '👨‍💼';
+            case 'ADMIN_RESPONSE':
+                return '👑';
             default:
                 return '🔔';
         }
@@ -284,6 +291,10 @@ export const NotificationProvider = ({ children }) => {
                 return 'text-orange-600 bg-orange-50 border-orange-200';
             case 'NEW_RESPONSE':
                 return 'text-green-600 bg-green-50 border-green-200';
+            case 'STAFF_RESPONSE':
+                return 'text-purple-600 bg-purple-50 border-purple-200';
+            case 'ADMIN_RESPONSE':
+                return 'text-red-600 bg-red-50 border-red-200';
             default:
                 return 'text-gray-600 bg-gray-50 border-gray-200';
         }
@@ -316,20 +327,28 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Auto-refresh notifications every 30 seconds
     useEffect(() => {
         const token = getAuthToken();
-        if (!token) return;
+        if (!token) {
+            console.log('No auth token found, skipping notification fetch');
+            return;
+        }
+
+        console.log('Setting up notification fetching...');
 
         // Initial load
         fetchUnreadCount().catch(console.error);
 
-        // Set up periodic refresh
+        // Set up periodic refresh - more frequent for testing
         const interval = setInterval(() => {
+            console.log('Refreshing notification count...');
             fetchUnreadCount().catch(console.error);
-        }, 30000); // 30 seconds
+        }, 10000); // 10 seconds for testing, change back to 30000 in production
 
-        return () => clearInterval(interval);
+        return () => {
+            console.log('Cleaning up notification interval');
+            clearInterval(interval);
+        };
     }, []);
 
     const value = {
