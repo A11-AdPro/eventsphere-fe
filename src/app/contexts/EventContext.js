@@ -212,7 +212,7 @@ export const EventProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     
-    const response = await fetch(`${API_BASE_URL}/events/my-events`, {
+    const response = await fetch(`${API_BASE_URL}/events/my-events`, { // Ensure API_BASE_URL is correct
       method: 'GET',
       headers: getAuthHeaders()
     });
@@ -221,13 +221,9 @@ export const EventProvider = ({ children }) => {
       throw new Error(`Failed to fetch organizer events: ${response.status}`);
     }
 
-    // return fetchOrganizerEvents;
     const data = await response.json();
-    const filteredEvents = data.filter(event => 
-      event.organizerId === parseInt(localStorage.getItem('id'))
-    );
-    setEvents(filteredEvents);  
-    return filteredEvents;
+    setEvents(data);  // Use the data directly from the API
+    return data;      // Return the data
   } catch (err) {
     setError(err.message);
     console.error('Error fetching organizer events:', err);

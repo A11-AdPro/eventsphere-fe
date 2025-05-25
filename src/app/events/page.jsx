@@ -62,26 +62,27 @@ const EventsPage = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
-            <button
+            <div className="flex items-center">
+              <button
                 onClick={handleBackToDashboard}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center text-gray-600 hover:text-gray-900 mr-4"
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
-                Back to Dashboard
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Events</h1>
-              <p className="text-gray-600 mt-1">Discover amazing events happening around you</p>
-            </div>
-            {userRole === 'ORGANIZER' && (
-              <button
-                onClick={handleCreateEvent}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Create Event
               </button>
-            )}
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Events</h1>
+                <p className="text-gray-600 mt-1">Discover amazing events happening around you</p>
+              </div>
+              {userRole === 'ORGANIZER' && (
+                <button
+                  onClick={handleCreateEvent}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Event
+                </button>
+              )}
+            </div>
             <button
               onClick={handleRefresh}
               disabled={loading}
