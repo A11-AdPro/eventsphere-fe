@@ -20,6 +20,8 @@ export const NotificationProvider = ({ children }) => {
     const [unreadCount, setUnreadCount] = useState(0); // Menyimpan jumlah notifikasi yang belum dibaca
     const [loading, setLoading] = useState(false); // Menyimpan status loading
     const [error, setError] = useState(null); // Menyimpan error jika ada
+    const [isPolling, setIsPolling] = useState(false); // Status polling untuk async
+    const [lastPollingTime, setLastPollingTime] = useState(null); // Waktu polling terakhir
 
     // URL API untuk pengambilan data notifikasi
     const API_BASE_URL = 'http://localhost:8080';
@@ -130,7 +132,7 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Mengambil jumlah notifikasi yang belum dibaca
+    // Mengambil jumlah notifikasi yang belum dibaca (Async optimized)
     const fetchUnreadCount = async () => {
         try {
             setError(null);
@@ -151,7 +153,66 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Menandai notifikasi sebagai dibaca
+    // Async real-time notification check
+    const checkForNewNotifications = async () => {
+        try {
+            setIsPolling(true);
+            const currentTime = new Date();
+
+            // Fetch latest notifications
+            const latestNotifications = await apiCall('/api/notifications');
+
+            if (Array.isArray(latestNotifications) && latestNotifications.length > 0) {
+                const currentUnreadCount = latestNotifications.filter(n => !n.read).length;
+
+                // Check if there are new notifications since last check
+                if (notifications.length > 0 && latestNotifications.length > notifications.length) {
+                    const newNotifications = latestNotifications.slice(0, latestNotifications.length - notifications.length);
+
+                    // Show browser notification for new notifications
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        newNotifications.forEach((notification, index) => {
+                            setTimeout(() => {
+                                new Notification('EventSphere - New Notification', {
+                                    body: notification.title,
+                                    icon: '/favicon.ico',
+                                    tag: notification.id,
+                                    badge: '/favicon.ico'
+                                });
+                            }, index * 1000); // Stagger notifications by 1 second
+                        });
+                    }
+
+                    // Dispatch custom event for UI updates
+                    if (typeof window !== 'undefined') {
+                        const event = new CustomEvent('newNotificationReceived', {
+                            detail: {
+                                count: currentUnreadCount,
+                                newNotifications: newNotifications
+                            }
+                        });
+                        window.dispatchEvent(event);
+                    }
+
+                    console.log(`🔔 ${newNotifications.length} new notifications received asynchronously`);
+                }
+
+                // Update state
+                setNotifications(latestNotifications);
+                setUnreadCount(currentUnreadCount);
+            }
+
+            setLastPollingTime(currentTime);
+            return latestNotifications;
+        } catch (error) {
+            console.error('Error in async notification check:', error);
+            return [];
+        } finally {
+            setIsPolling(false);
+        }
+    };
+
+    // Menandai notifikasi sebagai dibaca (Async)
     const markAsRead = async (notificationId) => {
         try {
             setLoading(true);
@@ -166,9 +227,12 @@ export const NotificationProvider = ({ children }) => {
             setUnreadCount(prev => Math.max(0, prev - 1));
 
             // Melakukan panggilan API untuk menandai sebagai dibaca
-            return await apiCall(`/api/notifications/${notificationId}/read`, {
+            const result = await apiCall(`/api/notifications/${notificationId}/read`, {
                 method: 'PATCH'
             });
+
+            console.log(`✅ Notification ${notificationId} marked as read asynchronously`);
+            return result;
         } catch (error) {
             console.error('Error marking notification as read:', error);
 
@@ -187,15 +251,16 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Menandai semua notifikasi sebagai dibaca
+    // Menandai semua notifikasi sebagai dibaca (Async)
     const markAllAsRead = async () => {
         try {
             setLoading(true);
             setError(null);
 
             // Menghitung jumlah notifikasi yang belum dibaca untuk pembaruan UI optimis
-            notifications.filter(n => !n.read).length;
-// Update UI secara optimis
+            const currentUnreadCount = notifications.filter(n => !n.read).length;
+
+            // Update UI secara optimis
             setNotifications(prev =>
                 prev.map(n => ({ ...n, read: true }))
             );
@@ -206,18 +271,13 @@ export const NotificationProvider = ({ children }) => {
                 method: 'PATCH'
             });
 
+            console.log(`✅ All ${currentUnreadCount} notifications marked as read asynchronously`);
             return true;
         } catch (error) {
             console.error('Error marking all notifications as read:', error);
 
             // Mengembalikan pembaruan UI jika terjadi kesalahan
-            setNotifications(prev =>
-                prev.map((n, index) => {
-                    const originalNotification = notifications[index];
-                    return originalNotification ? { ...n, read: originalNotification.read } : n;
-                })
-            );
-            setUnreadCount(currentUnreadCount);
+            await fetchNotifications(); // Refresh dari server
 
             setError(error.message);
             throw error;
@@ -226,7 +286,7 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    // Menghapus notifikasi
+    // Menghapus notifikasi (Async)
     const deleteNotification = async (notificationId) => {
         try {
             setLoading(true);
@@ -246,6 +306,7 @@ export const NotificationProvider = ({ children }) => {
                 method: 'DELETE'
             });
 
+            console.log(`🗑️ Notification ${notificationId} deleted asynchronously`);
             return true;
         } catch (error) {
             console.error('Error deleting notification:', error);
@@ -258,6 +319,21 @@ export const NotificationProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Request notification permissions (Async)
+    const requestNotificationPermission = async () => {
+        if ('Notification' in window) {
+            try {
+                const permission = await Notification.requestPermission();
+                console.log(`🔔 Notification permission: ${permission}`);
+                return permission === 'granted';
+            } catch (error) {
+                console.error('Error requesting notification permission:', error);
+                return false;
+            }
+        }
+        return false;
     };
 
     // Menampilkan ikon berdasarkan jenis notifikasi
@@ -312,6 +388,7 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
+    // ASYNC POLLING SETUP - This is where the real async magic happens
     useEffect(() => {
         const token = getAuthToken();
         if (!token) {
@@ -319,35 +396,98 @@ export const NotificationProvider = ({ children }) => {
             return;
         }
 
-        console.log('Setting up notification fetching...');
+        console.log('🚀 Setting up asynchronous notification system...');
+
+        // Request notification permission
+        requestNotificationPermission();
 
         // Initial load
         fetchUnreadCount().catch(console.error);
 
-        // Set up periodic refresh - more frequent for testing
-        const interval = setInterval(() => {
-            console.log('Refreshing notification count...');
-            fetchUnreadCount().catch(console.error);
-        },); // 10 seconds for testing, change back to 30000 in roduction
+        // Set up async polling with exponential backoff
+        let pollInterval = 5000; // Start with 5 seconds
+        const maxInterval = 30000; // Max 30 seconds
+        const minInterval = 5000; // Min 5 seconds
 
-        return () => {
-            console.log('Cleaning up notification interval');
-            clearInterval(interval);
+        let intervalId;
+
+        const startAsyncPolling = () => {
+            intervalId = setInterval(async () => {
+                try {
+                    console.log(`🔄 Async polling for notifications... (interval: ${pollInterval}ms)`);
+                    await checkForNewNotifications();
+
+                    // Reduce polling frequency if no new notifications
+                    if (pollInterval < maxInterval) {
+                        pollInterval = Math.min(pollInterval * 1.2, maxInterval);
+                    }
+                } catch (error) {
+                    console.error('Error in async polling:', error);
+
+                    // Increase polling frequency on error (but not below minimum)
+                    pollInterval = Math.max(pollInterval * 0.8, minInterval);
+                }
+            }, pollInterval);
         };
-    }, []);
+
+        // Start polling
+        startAsyncPolling();
+
+        // Listen for focus events to refresh immediately
+        const handleFocus = () => {
+            console.log('🎯 Window focused - refreshing notifications asynchronously');
+            checkForNewNotifications();
+            pollInterval = minInterval; // Reset to fast polling
+        };
+
+        // Listen for visibility change to adjust polling
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                console.log('👁️ Page hidden - reducing polling frequency');
+                pollInterval = maxInterval;
+            } else {
+                console.log('👁️ Page visible - increasing polling frequency');
+                pollInterval = minInterval;
+                checkForNewNotifications();
+            }
+        };
+
+        // Add event listeners
+        window.addEventListener('focus', handleFocus);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // Cleanup function
+        return () => {
+            console.log('🧹 Cleaning up async notification system');
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+            window.removeEventListener('focus', handleFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []); // Empty dependency array for setup only
 
     // Context value yang akan dipakai oleh komponen lain
     const value = {
+        // State
         notifications,
         unreadCount,
         loading,
         error,
+        isPolling,
+        lastPollingTime,
+
+        // Async functions
         fetchNotifications,
         fetchUnreadNotifications,
         fetchUnreadCount,
+        checkForNewNotifications,
         markAsRead,
         markAllAsRead,
         deleteNotification,
+        requestNotificationPermission,
+
+        // Utility functions
         getNotificationIcon,
         getNotificationColor,
         formatDate,
