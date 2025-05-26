@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useReports } from '../../contexts/ReportContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, FileText, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
 
-export default function CreateReportPage() {
+function CreateReportForm() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -436,3 +436,12 @@ export default function CreateReportPage() {
         </div>
     );
 }
+
+export default function CreateReportPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div><p className="mt-4 text-gray-600">Loading page...</p></div></div>}>
+            <CreateReportForm />
+        </Suspense>
+    );
+}
+
