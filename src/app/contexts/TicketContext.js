@@ -46,6 +46,7 @@ export const TicketProvider = ({ children }) => {
       }
 
       const data = await response.json();
+      console.log('Fetched tickets:', data);
       setTickets(data);
       return data;
     } catch (err) {
@@ -96,18 +97,38 @@ export const TicketProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${API_BASE_URL}/tickets/${id}`, {
+      console.log('Fetching ticket by ID:', id);
+      
+      // First try to find in existing tickets
+      const existingTicket = tickets.find(ticket => ticket.id === id);
+      if (existingTicket) {
+        console.log('Found ticket in cache:', existingTicket);
+        setSelectedTicket(existingTicket);
+        return existingTicket;
+      }
+
+      // If not found in cache, fetch all tickets and find the one we need
+      const response = await fetch(`${API_BASE_URL}/tickets`, {
         method: 'GET',
         headers: getAuthHeaders()
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch ticket: ${response.status}`);
+        throw new Error(`Failed to fetch tickets: ${response.status}`);
       }
 
-      const data = await response.json();
-      setSelectedTicket(data);
-      return data;
+      const allTickets = await response.json();
+      console.log('All tickets from API:', allTickets);
+      setTickets(allTickets);
+      
+      const targetTicket = allTickets.find(ticket => ticket.id === id);
+      if (!targetTicket) {
+        throw new Error(`Ticket with ID ${id} not found`);
+      }
+
+      console.log('Found target ticket:', targetTicket);
+      setSelectedTicket(targetTicket);
+      return targetTicket;
     } catch (err) {
       setError(err.message);
       console.error('Error fetching ticket:', err);
@@ -130,7 +151,7 @@ export const TicketProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Failed to create ticket: ${response.status}`);
       }
 
@@ -170,7 +191,7 @@ export const TicketProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Failed to update ticket: ${response.status}`);
       }
 
@@ -217,7 +238,7 @@ export const TicketProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Failed to delete ticket: ${response.status}`);
       }
 
@@ -247,11 +268,13 @@ export const TicketProvider = ({ children }) => {
     }
   };
 
-  // Purchase ticket (payment)
+  // Purchase ticket (payment) - FIXED
   const purchaseTicket = async (ticketId) => {
     try {
       setLoading(true);
       setError(null);
+      
+      console.log('Purchasing ticket with ID:', ticketId);
       
       const response = await fetch(`${API_BASE_URL}/transactions/purchase/ticket/${ticketId}`, {
         method: 'POST',
@@ -259,11 +282,20 @@ export const TicketProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to purchase ticket: ${response.status}`);
+        let errorMessage = `Failed to purchase ticket: ${response.status}`;
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          // If we can't parse the error response, use the default message
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const purchaseResult = await response.json();
+      console.log('Purchase result:', purchaseResult);
       
       // Update user balance if provided in response
       if (purchaseResult.newBalance !== undefined) {
@@ -272,6 +304,15 @@ export const TicketProvider = ({ children }) => {
       
       // Refresh tickets to update sold status
       await fetchAllTickets();
+      
+      // If we have the ticket in our selected ticket, refresh it
+      if (selectedTicket && selectedTicket.id === ticketId) {
+        try {
+          await fetchTicketById(ticketId);
+        } catch (err) {
+          console.warn('Failed to refresh selected ticket after purchase:', err);
+        }
+      }
       
       return purchaseResult;
     } catch (err) {
@@ -283,7 +324,7 @@ export const TicketProvider = ({ children }) => {
     }
   };
 
-  // Get user balance - FIXED: Use /api/auth/me endpoint
+  // Get user balance
   const fetchUserBalance = async () => {
     try {
       setLoading(true);
@@ -300,6 +341,7 @@ export const TicketProvider = ({ children }) => {
 
       const userData = await response.json();
       const balance = userData.balance || 0;
+      console.log('User balance:', balance);
       setUserBalance(balance);
       return balance;
     } catch (error) {
@@ -325,7 +367,7 @@ export const TicketProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Failed to top up: ${response.status}`);
       }
 
@@ -369,7 +411,8 @@ export const TicketProvider = ({ children }) => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
-      currency: 'IDR'
+      currency: 'IDR',
+      minimumFractionDigits: 0
     }).format(amount);
   };
 
@@ -386,6 +429,28 @@ export const TicketProvider = ({ children }) => {
 
   const isTicketAvailable = (ticket) => {
     return !ticket.soldOut && ticket.quota > 0;
+  };
+
+  // Format date utility
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      return new Date(dateString).toLocaleString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
+  };
+
+  // Clear error function
+  const clearError = () => {
+    setError(null);
   };
 
   // Load initial data
@@ -419,9 +484,11 @@ export const TicketProvider = ({ children }) => {
     fetchTransactionHistory,
     setSelectedTicket,
     setError,
+    clearError,
     
     // Utilities
     formatCurrency,
+    formatDate,
     getTicketCategoryColor,
     isTicketAvailable
   };
