@@ -75,7 +75,7 @@ export default function TicketManagementPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Simple validation
+        // Validasi awal
         if (!formData.name || !formData.price || !formData.quota || !formData.category || !formData.eventId) {
             alert('Please fill all fields correctly.');
             return;
@@ -83,16 +83,23 @@ export default function TicketManagementPage() {
 
         try {
             if (isUpdateMode && currentTicketId) {
-                await updateTicket(currentTicketId, formData);
-                alert('Ticket updated successfully!');
+                const updated = await updateTicket(currentTicketId, formData);
+                if (updated) {
+                    alert('Ticket updated successfully!');
+                }
             } else {
-                await createTicket(formData);
-                alert('Ticket created successfully!');
+                const created = await createTicket(formData);
+                if (created) {
+                    alert('Ticket created successfully!');
+                }
             }
+
+            // Hanya kalau berhasil
             setShowModal(false);
             fetchAllTickets();
         } catch (err) {
-            alert('Error: ' + err.message);
+            console.error('Error submitting form:', err);
+            alert('Error: ' + (err.message || 'Unknown error occurred.'));
         }
     };
 
