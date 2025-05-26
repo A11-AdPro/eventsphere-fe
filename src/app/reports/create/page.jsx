@@ -49,7 +49,7 @@ export default function CreateReportPage() {
     const fetchUserEvents = async () => {
         try {
             setLoadingEvents(true);
-            const response = await fetch('http://localhost:8080/api/events', {
+            const response = await fetch('http://34.193.71.203/api/events', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
