@@ -17,11 +17,7 @@ export const TransactionProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // CHANGE THIS LINE WHEN DEPLOYING
-  // Development: 'http://localhost:8080'
-  // Production:  'http://34.193.71.203'
-  const API_BASE_URL = 'http://localhost:8080';
-  // const API_BASE_URL = 'http://34.193.71.203';
+  const API_BASE_URL = 'http://34.193.71.203';
 
   const getAuthToken = () => {
     if (typeof window !== 'undefined') {

@@ -21,7 +21,7 @@ export const ReportProvider = ({ children }) => {
     const [loading, setLoading] = useState(false); // Status loading
     const [error, setError] = useState(null); // Menyimpan error jika ada
 
-    const API_BASE_URL = 'http://localhost:8080'; // URL API untuk pengambilan data
+    const API_BASE_URL = 'http://34.193.71.203'; // URL API untuk pengambilan data
 
     // Mendapatkan token autentikasi dari localStorage
     const getAuthToken = () => {

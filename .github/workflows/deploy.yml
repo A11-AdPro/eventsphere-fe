@@ -1,0 +1,51 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set environment variables
+        id: env
+        run: |
+          echo "NODE_ENV=development" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" >> $GITHUB_ENV 
+            
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            mkdir -p ~/frontend-deploy
+            cd ~/frontend-deploy
+            
+            if [ -d ".git" ]; then
+              git fetch
+              git checkout ${{ github.ref_name }}
+              git pull origin ${{ github.ref_name }}
+            else
+              git clone -b ${{ github.ref_name }} ${{ github.server_url }}/${{ github.repository }} .
+            fi
+            
+            cat > .env << EOL
+            NODE_ENV=development
+            NEXT_PUBLIC_API_BASE_URL=${{ env.NEXT_PUBLIC_API_BASE_URL }} 
+            EOL
+            
+            docker-compose stop frontend || true
+            docker-compose rm -f frontend || true
+            
+            docker-compose build frontend
+            docker-compose up -d frontend
+
+

@@ -22,7 +22,7 @@ export default function AdminReportDetailPage() {
     const [commentError, setCommentError] = useState('');
     const [statusUpdating, setStatusUpdating] = useState(false);
 
-    const API_BASE_URL = 'http://localhost:8080';
+    const API_BASE_URL = 'http://34.193.71.203';
 
     // Hook untuk memeriksa apakah komponen sudah dimuat
     useEffect(() => {
