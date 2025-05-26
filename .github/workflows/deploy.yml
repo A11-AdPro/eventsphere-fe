@@ -17,7 +17,7 @@ jobs:
         id: env
         run: |
           echo "NODE_ENV=development" >> $GITHUB_ENV
-          echo "NEXT_PUBLIC_API_BASE_URL=http://34.193.71.203" >> $GITHUB_ENV 
+          echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" >> $GITHUB_ENV 
             
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.0
