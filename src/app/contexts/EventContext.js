@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const EventContext = createContext();
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://34.193.71.203/api';
 
 export const useEvents = () => {
   const context = useContext(EventContext);
