@@ -47,7 +47,7 @@ export default function AttendeeLayout({ children }) {
 
     const navigationItems = [
         { id: 'events', label: 'Available Events', icon: '🎟️', href: '/events' },
-        { id: 'ratings', label: 'My Reviews', icon: '⭐', href: '/ratings' },
+        { id: 'ratings', label: 'My Reviews', icon: '⭐', href: '/reviews' },
         { id: 'transactions', label: 'Transactions', icon: '💳', href: '/transactions' },
         { id: 'reports', label: 'Support', icon: '🆘', href: '/reports' }
     ];
