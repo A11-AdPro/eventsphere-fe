@@ -17,7 +17,11 @@ export const AdminUserProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const API_BASE_URL = 'http://34.193.71.203';
+    // CHANGE THIS LINE WHEN DEPLOYING
+    // Development: 'http://localhost:8080'
+    // Production:  'http://34.193.71.203'
+    const API_BASE_URL = 'http://localhost:8080';
+    // const API_BASE_URL = 'http://34.193.71.203';
 
     const getAuthHeaders = () => {
         const token = localStorage.getItem('token');

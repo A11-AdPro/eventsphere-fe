@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 
 const AuthContext = createContext();
 
-const API_BASE_URL = 'http://34.193.71.203';
+// CHANGE THIS LINE WHEN DEPLOYING
+// Development: 'http://localhost:8080'
+// Production:  'http://34.193.71.203'
+const API_BASE_URL = 'http://localhost:8080';
+// const API_BASE_URL = 'http://34.193.71.203';
 
 const AUTH_API_ROUTES = {
     LOGIN: `${API_BASE_URL}/api/auth/login`,

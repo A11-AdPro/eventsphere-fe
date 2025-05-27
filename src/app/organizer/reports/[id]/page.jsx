@@ -54,7 +54,7 @@ export default function OrganizerReportDetailPage() {
     // Fungsi untuk mengambil laporan organizer berdasarkan ID
     const fetchOrganizerReport = async (id) => {
         try {
-            const response = await fetch(`http://34.193.71.203/api/organizer/reports/${id}`, {
+            const response = await fetch(`http://localhost:8080/api/organizer/reports/${id}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
@@ -97,7 +97,7 @@ export default function OrganizerReportDetailPage() {
             setCommentLoading(true);
             setCommentError('');
 
-            const response = await fetch(`http://34.193.71.203/api/organizer/reports/${reportId}/comments`, {
+            const response = await fetch(`http://localhost:8080/api/organizer/reports/${reportId}/comments`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -126,7 +126,7 @@ export default function OrganizerReportDetailPage() {
         try {
             setStatusUpdating(true);
 
-            const response = await fetch(`http://34.193.71.203/api/organizer/reports/${reportId}/status?status=${newStatus}`, {
+            const response = await fetch(`http://localhost:8080/api/organizer/reports/${reportId}/status?status=${newStatus}`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,

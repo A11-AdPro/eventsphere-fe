@@ -24,7 +24,7 @@ export const NotificationProvider = ({ children }) => {
     const [lastPollingTime, setLastPollingTime] = useState(null); // Waktu polling terakhir
 
     // URL API untuk pengambilan data notifikasi
-    const API_BASE_URL = 'http://34.193.71.203';
+    const API_BASE_URL = 'http://localhost:8080';
 
     // Mendapatkan token autentikasi dari localStorage
     const getAuthToken = () => {
