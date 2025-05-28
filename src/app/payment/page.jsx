@@ -145,7 +145,7 @@ function PaymentForm() {
                 try {
                   console.log('Testing direct API call...');
                   const token = localStorage.getItem('token');
-                  const response = await fetch(`http://localhost:8080/api/tickets/${ticketId}`, {
+                  const response = await fetch(`http://34.193.71.203/api/transactions/purchase/ticket/${ticketId}`, {
                     headers: {
                       'Authorization': `Bearer ${token}`,
                       'Content-Type': 'application/json'
