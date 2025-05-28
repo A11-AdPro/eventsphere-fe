@@ -5,10 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useEvents } from '../../contexts/EventContext';
 import { useTickets } from '../../contexts/TicketContext';
 import { useAuth } from '../../contexts/AuthContext'; 
-import { useReview } from '../../contexts/ReviewContext';
-import { Calendar, MapPin, Users, ArrowLeft, CreditCard, Plus, Edit, Trash2, XCircle, Star } from 'lucide-react';
-import Link from 'next/link';
-import ReviewItem from '../../components/ReviewItem';
+import { Calendar, MapPin, Users, ArrowLeft, CreditCard, Plus, Edit, Trash2, XCircle } from 'lucide-react';
 
 const EventDetailPage = () => {
   const router = useRouter();
@@ -43,41 +40,12 @@ const EventDetailPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  const {
-    reviews,
-    averageRating,
-    loading: reviewLoading,
-    error: reviewError,
-    getReviewsByEventId,
-    getAverageRating
-  } = useReview();
-
-  // Create a single loading state to prevent flickering
-  const [isPageLoading, setIsPageLoading] = useState(true);
-
   useEffect(() => {
     if (eventId) {
-      // Use a single async function to coordinate all data fetching
-      const fetchAllData = async () => {
-        setIsPageLoading(true);
-        try {
-          // Load data in parallel
-          await Promise.all([
-            fetchEventById(eventId),
-            fetchTicketsByEventId(eventId),
-            getReviewsByEventId(eventId, 0, 3, 'newest'),
-            getAverageRating(eventId)
-          ]);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        } finally {
-          setIsPageLoading(false);
-        }
-      };
-
-      fetchAllData();
+      fetchEventById(eventId);
+      fetchTicketsByEventId(eventId);
     }
-  }, [eventId]); // Only depend on eventId to prevent re-fetching unnecessarily
+  }, [eventId]);
 
   const handleBackToEvents = () => {
     router.push('/events');
@@ -122,7 +90,7 @@ const EventDetailPage = () => {
   const tickets = eventTickets[eventId] || [];
   const isEventOrganizer = user && user.role === 'ORGANIZER' && selectedEvent && selectedEvent.organizerId === user.id;
 
-  if (isPageLoading) {
+  if (eventLoading || ticketLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -433,87 +401,6 @@ const EventDetailPage = () => {
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-        </div>
-
-        {/* Reviews Section */}
-        <div className="bg-white rounded-lg shadow-md p-8 mt-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Reviews</h2>
-            <div className="flex items-center">
-              <div className="flex items-center bg-yellow-50 px-3 py-2 rounded-md">
-                <Star className="h-6 w-6 text-yellow-500 mr-1" fill="currentColor" />
-                <span className="text-xl font-bold text-gray-900">{averageRating ? averageRating.toFixed(1) : '0.0'}</span>
-                <span className="text-gray-500 ml-1">/ 5.0</span>
-              </div>
-              <Link href={`/events/${eventId}/reviews`} className="ml-4 text-blue-600 hover:text-blue-800 font-medium">
-                View all reviews
-              </Link>
-            </div>
-          </div>
-
-          {reviewError && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-              <p>Error loading reviews: {reviewError}</p>
-            </div>
-          )}
-
-          {reviewLoading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading reviews...</p>
-            </div>
-          ) : reviews.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <Star className="w-16 h-16 mx-auto" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Reviews Yet</h3>
-              <p className="text-gray-500 mb-6">Be the first to share your experience at this event.</p>
-
-              {user?.role === 'ATTENDEE' && (
-                <Link
-                  href={`/events/${eventId}/reviews/create`}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium inline-flex items-center"
-                >
-                  <Star className="w-4 h-4 mr-2" />
-                  Write a Review
-                </Link>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {reviews.slice(0, 3).map((review) => (
-                <ReviewItem
-                  key={review.id}
-                  review={review}
-                  eventId={eventId}
-                  onUpdate={() => {
-                    getReviewsByEventId(eventId, 0, 3, 'newest');
-                    getAverageRating(eventId);
-                  }}
-                />
-              ))}
-
-              <div className="flex justify-between pt-4 border-t mt-6">
-                <Link
-                  href={`/events/${eventId}/reviews`}
-                  className="text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  See all reviews
-                </Link>
-
-                {user?.role === 'ATTENDEE' && (
-                  <Link
-                    href={`/events/${eventId}/reviews/create`}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium inline-flex items-center"
-                  >
-                    <Star className="w-4 h-4 mr-2" />
-                    Write a Review
-                  </Link>
-                )}
-              </div>
             </div>
           )}
         </div>
